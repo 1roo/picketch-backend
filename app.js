@@ -22,3 +22,5 @@ sequelize
   .catch(err => {
     console('err', err);
   });
+
+//test
