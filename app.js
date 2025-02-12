@@ -16,7 +16,7 @@ sequelize
   .sync({ force: false })
   .then(() => {
     app.listen(process.env.SERVER_PORT, () => {
-      console.log(`http://localhost:${PORT}`);
+      console.log(`http://localhost:${process.env.SERVER_PORT}`);
     });
   })
   .catch((err) => {
