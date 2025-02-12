@@ -15,10 +15,10 @@ app.use(serverPrefix, indexRouter);
 sequelize
   .sync({ force: false })
   .then(() => {
-    app.listen(PORT, () => {
+    app.listen(process.env.SERVER_PORT, () => {
       console.log(`http://localhost:${PORT}`);
     });
   })
-  .catch(err => {
-    console('err', err);
+  .catch((err) => {
+    console.log('err', err);
   });
