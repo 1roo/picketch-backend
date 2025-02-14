@@ -20,7 +20,7 @@ const User = (sequelize, DataTypes) => {
         comment: "소셜 로그인 유형",
       },
       nickname: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(15),
         allowNull: false,
         unique: true,
         comment: "닉네임",
