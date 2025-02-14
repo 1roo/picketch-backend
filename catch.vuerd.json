@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -392.9601,
-    "scrollLeft": -244.7084,
-    "zoomLevel": 0.61,
+    "scrollTop": -18,
+    "scrollLeft": -357,
+    "zoomLevel": 1,
     "show": 431,
     "database": 4,
     "databaseName": "",
@@ -117,7 +117,7 @@
           "y": 907.1127,
           "zIndex": 11,
           "widthName": 60,
-          "widthComment": 65,
+          "widthComment": 60,
           "color": ""
         },
         "meta": {
@@ -397,7 +397,7 @@
           "x": 48.0035,
           "y": 103.1896,
           "zIndex": 452,
-          "widthName": 62,
+          "widthName": 65,
           "widthComment": 60,
           "color": ""
         },
@@ -425,7 +425,7 @@
           "x": 1037.0165,
           "y": 750.1394,
           "zIndex": 740,
-          "widthName": 71,
+          "widthName": 76,
           "widthComment": 60,
           "color": ""
         },
@@ -606,7 +606,7 @@
         "options": 10,
         "ui": {
           "keys": 1,
-          "widthName": 62,
+          "widthName": 69,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
@@ -706,7 +706,7 @@
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 67,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
@@ -966,7 +966,7 @@
         "options": 10,
         "ui": {
           "keys": 1,
-          "widthName": 77,
+          "widthName": 83,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
@@ -1026,7 +1026,7 @@
         "options": 10,
         "ui": {
           "keys": 1,
-          "widthName": 62,
+          "widthName": 67,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
@@ -1339,20 +1339,20 @@
       "N8YB6CTebR9mzGPsjfddi": {
         "id": "N8YB6CTebR9mzGPsjfddi",
         "tableId": "HCCznYJutaXNnIrSc-x4l",
-        "name": "time",
+        "name": "send_time",
         "comment": "",
         "dataType": "",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 61,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1739338551224,
+          "updateAt": 1739501991690,
           "createAt": 1739338474828
         }
       },
@@ -1606,7 +1606,7 @@
         "options": 10,
         "ui": {
           "keys": 1,
-          "widthName": 86,
+          "widthName": 93,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
@@ -1748,7 +1748,7 @@
           "columnIds": [
             "I_RKSPbMB9giKTidtGRqa"
           ],
-          "x": 433.4189,
+          "x": 436.9189,
           "y": 735.6043999999999,
           "direction": 8
         },
@@ -1776,7 +1776,7 @@
           "columnIds": [
             "I_RKSPbMB9giKTidtGRqa"
           ],
-          "x": 524.6689,
+          "x": 529.9189,
           "y": 511.6044,
           "direction": 4
         },
@@ -1953,7 +1953,7 @@
           "columnIds": [
             "WLwS8fuzGEoMiuPv4LKKj"
           ],
-          "x": 615.9189,
+          "x": 622.9189,
           "y": 623.6043999999999,
           "direction": 2
         },
@@ -1972,7 +1972,7 @@
           "columnIds": [
             "I_RKSPbMB9giKTidtGRqa"
           ],
-          "x": 342.1689,
+          "x": 343.9189,
           "y": 511.6044,
           "direction": 4
         },
@@ -1981,7 +1981,7 @@
           "columnIds": [
             "qJjx77uNGLhnduc5JDk11"
           ],
-          "x": 239.0035,
+          "x": 242.0035,
           "y": 327.1896,
           "direction": 8
         },
@@ -2009,7 +2009,7 @@
           "columnIds": [
             "T7YFJbFPSpqzs-5tVImKJ"
           ],
-          "x": 1083.2577,
+          "x": 1086.7577,
           "y": 253.4346,
           "direction": 4
         },
@@ -2811,7 +2811,7 @@
       1739338474827,
       -1,
       {
-        "name": 1739338551220
+        "name": 1739501991689
       }
     ],
     "yek5HuF5nDYHxDHz3tn6f": [

@@ -15,6 +15,9 @@ db.Sequelize = Sequelize;
 db.User = require("./User")(sequelize, Sequelize);
 db.Region = require("./Region")(sequelize, Sequelize);
 db.Notification = require("./Notification")(sequelize, Sequelize);
+db.Dm = require("./Dm")(sequelize, Sequelize);
+db.DmChat = require("./DmChat")(sequelize, Sequelize);
+db.Friend = require("./Friend")(sequelize, Sequelize);
 
 // 관계 (함수 내부에 작성 바랍니당)
 const dataRelation = () => {
@@ -39,6 +42,40 @@ const dataRelation = () => {
     foreignKey: "user_id",
     targetKey: "user_id",
   });
+
+  // Friend 
+  db.User.hasMany(db.Friend, {
+    foreignKey: "user_id",
+    sourceKey: "user_id",
+  });
+
+  db.Friend.belongsTo(db.User, {
+    foreignKey: "user_id",
+    targetKey: "user_id",
+  });
+
+  // Dm
+  db.User.hasMany(db.Dm, {
+    foreignKey: "user_id",
+    sourceKey: "user_id",
+  });
+
+  db.Dm.belongsTo(db.User, {
+    foreignKey: "user_id",
+    targetKey: "user_id",
+  });
+
+  // Dm-Dmchat
+  db.Dm.hasMany(db.DmChat, {
+    foreignKey: "dm_id",
+    sourceKey: "dm_id",
+  });
+
+  db.DmChat.belongsTo(db.Dm, {
+    foreignKey: "dm_id",
+    targetKey: "dm_id",
+  });
+
 };
 
 dataRelation();
