@@ -19,17 +19,17 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TokenResponse"
+              $ref: "#/component/schemas/TokenResponse"
       "401":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
       "500":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
 
 /auth/kakao:
   post:
@@ -52,17 +52,17 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TokenResponse"
+              $ref: "#/component/schemas/TokenResponse"
       "401":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
       "500":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
 
 /auth/naver:
   post:
@@ -85,17 +85,17 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TokenResponse"
+              $ref: "#/component/schemas/TokenResponse"
       "401":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
       "500":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
 
 /auth/google:
   post:
@@ -118,17 +118,17 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TokenResponse"
+              $ref: "#/component/schemas/TokenResponse"
       "401":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
       "500":
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
 
 /auth/logout:
   post:
@@ -143,10 +143,10 @@
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SuccessResponse"
+              $ref: "#/component/schemas/SuccessResponse"
       "400":
         description: 이미 로그아웃됨
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Error"
+              $ref: "#/component/schemas/Error"
