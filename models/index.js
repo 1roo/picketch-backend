@@ -11,6 +11,25 @@ let sequelize = new Sequelize(
   config
 );
 
+const KeywordModel = require('./game/Keyword.js')(sequelize);
+const GameModel = require('./game/Game.js')(sequelize);
+const PlayerGroupModel = require('./game/PlayerGroup.js')(sequelize);
+
+GameModel.hasMany(PlayerGroupModel, {
+  foreignKey: 'gameId',
+  sourceKey: 'gameId',
+  onUpdate: 'CASCADE',
+  onDelete: 'CASCADE',
+});
+PlayerGroupModel.belongsTo(GameModel, {
+  foreignKey: 'gameId',
+  targetKey: 'gameId',
+});
+
+db.Keyword = KeywordModel;
+db.Game = GameModel;
+db.PlayerGroup = PlayerGroupModel;
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 module.exports = db;
