@@ -53,11 +53,25 @@ const dataRelation = () => {
 
   // Notification
   db.User.hasMany(db.Notification, {
+    as: "ReceivedNotifications",
     foreignKey: "user_id",
     sourceKey: "user_id",
   });
 
+  db.User.hasMany(db.Notification, {
+    as: "SentNotifications",
+    foreignKey: "from_user_id",
+    sourceKey: "user_id",
+  });
+
   db.Notification.belongsTo(db.User, {
+    as: "FromUser",
+    foreignKey: "from_user_id",
+    targetKey: "user_id",
+  });
+
+  db.Notification.belongsTo(db.User, {
+    as: "ToUser",
     foreignKey: "user_id",
     targetKey: "user_id",
   });

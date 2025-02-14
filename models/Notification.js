@@ -11,8 +11,12 @@ const Notification = (sequelize, DataTypes) => {
       user_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        unique: true,
         comment: "수신자 id",
+      },
+      from_user_id: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        comment: "발신자 id",
       },
       notification_type: {
         type: DataTypes.ENUM(
@@ -24,6 +28,11 @@ const Notification = (sequelize, DataTypes) => {
         allowNull: false,
         comment: "알림 유형",
       },
+      response_status: {
+        type: DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED"),
+        allowNull: true,
+        comment: "응답 상태",
+      },
       content: {
         type: DataTypes.STRING(255),
         allowNull: false,
@@ -33,6 +42,22 @@ const Notification = (sequelize, DataTypes) => {
         type: DataTypes.STRING(255),
         allowNull: true,
         comment: "알림 클릭시 이동할 URL",
+      },
+      room_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "게임방 ID", // 게임초대의 경우
+      },
+      expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: "알림 만료 시간", // 게임초대의 경우
+      },
+      requires_response: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: "응답 필요 여부",
       },
       is_read: {
         type: DataTypes.BOOLEAN,
@@ -52,10 +77,10 @@ const Notification = (sequelize, DataTypes) => {
       createdAt: "create_date",
       indexes: [
         {
-          fields: ["user_id", "is_read"],
-          name: "idx_user_unread",
+          fields: ["user_id", "is_read", "create_date"],
+          name: "idx_user_notifications",
         },
-      ], // 읽지 않은 알림만 인덱스 생성
+      ], // 유저 알림 인덱스 생성
     },
   );
 };

@@ -20,7 +20,7 @@ const User = (sequelize, DataTypes) => {
         comment: "소셜 로그인 유형",
       },
       nickname: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(15),
         allowNull: false,
         unique: true,
         comment: "닉네임",
@@ -41,6 +41,17 @@ const User = (sequelize, DataTypes) => {
         defaultValue: 0,
         comment: "누적 점수",
       },
+      status: {
+        type: DataTypes.ENUM("ONLINE", "OFFLINE", "IN_GAME"),
+        defaultValue: "OFFLINE",
+        allowNull: false,
+        comment: "유저 상태",
+      },
+      last_seen: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: "마지막 접속 시간",
+      },
       is_deleted: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -53,6 +64,22 @@ const User = (sequelize, DataTypes) => {
       timestamps: true,
       updatedAt: "update_date",
       createdAt: "create_date",
+      indexes: [
+        {
+          fields: ["nickname"],
+          name: "idx_nickname",
+          unique: true,
+        }, // 닉네임 중복 체크용
+        {
+          fields: ["social_id", "social_type"],
+          name: "idx_social_login",
+          unique: true,
+        }, // 소셜 로그인 조회용
+        {
+          fields: ["region_id", "user_score"],
+          name: "idx_region_score",
+        }, // 지역별 사용자 순위 조회용
+      ],
     },
   );
 };
