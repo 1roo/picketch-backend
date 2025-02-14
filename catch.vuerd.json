@@ -4,8 +4,13 @@
   "settings": {
     "width": 2000,
     "height": 2000,
+<<<<<<< HEAD
     "scrollTop": -743.8492,
     "scrollLeft": -636.1869,
+=======
+    "scrollTop": -18,
+    "scrollLeft": -357,
+>>>>>>> develop
     "zoomLevel": 1,
     "show": 431,
     "database": 4,
@@ -1339,20 +1344,20 @@
       "N8YB6CTebR9mzGPsjfddi": {
         "id": "N8YB6CTebR9mzGPsjfddi",
         "tableId": "HCCznYJutaXNnIrSc-x4l",
-        "name": "time",
+        "name": "send_time",
         "comment": "",
         "dataType": "",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 61,
           "widthComment": 60,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1739338551224,
+          "updateAt": 1739501991690,
           "createAt": 1739338474828
         }
       },
@@ -2811,7 +2816,7 @@
       1739338474827,
       -1,
       {
-        "name": 1739338551220
+        "name": 1739501991689
       }
     ],
     "yek5HuF5nDYHxDHz3tn6f": [
