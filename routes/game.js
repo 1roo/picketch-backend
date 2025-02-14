@@ -1,6 +1,6 @@
-const express = require('express');
+const express = require("express");
 const gameRouter = express.Router();
-const gameController = require('../controllers/gameController');
+const gameController = require("../controllers/gameController");
 
 /**
  * @swagger
@@ -79,7 +79,7 @@ const gameController = require('../controllers/gameController');
  *
  */
 
-gameRouter.get('/keyword/:count', gameController.getRandomKeyword);
+gameRouter.get("/keyword", gameController.getRandomKeyword);
 
 /**
  * @swagger
@@ -165,6 +165,6 @@ gameRouter.get('/keyword/:count', gameController.getRandomKeyword);
  *                      type: string
  *                      example: 서버 에러
  */
-gameRouter.post('/score', gameController.setFinalScore);
+gameRouter.post("/score", gameController.setFinalScore);
 
 module.exports = gameRouter;

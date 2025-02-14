@@ -1,6 +1,6 @@
-const Keyword = (sequelize,DataTypes) => {
+const Keyword = (sequelize, DataTypes) => {
   return sequelize.define(
-    'keyword',
+    "keyword",
     {
       keyword_id: {
         type: DataTypes.INTEGER,
@@ -14,10 +14,10 @@ const Keyword = (sequelize,DataTypes) => {
       },
     },
     {
-      tableName: 'keyword',
+      tableName: "keyword",
       timestamps: false,
       freezeTableName: true,
-    }
+    },
   );
 };
 
