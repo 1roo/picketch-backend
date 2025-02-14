@@ -7,27 +7,7 @@ const db = {};
 
 let sequelize = new Sequelize(config.database, config.username, config.password, config);
 
-const KeywordModel = require('./game/Keyword.js')(sequelize);
-const GameModel = require('./game/Game.js')(sequelize);
-const PlayerGroupModel = require('./game/PlayerGroup.js')(sequelize);
-
-GameModel.hasMany(PlayerGroupModel, {
-  foreignKey: 'gameId',
-  sourceKey: 'gameId',
-  onUpdate: 'CASCADE',
-  onDelete: 'CASCADE',
-});
-PlayerGroupModel.belongsTo(GameModel, {
-  foreignKey: 'gameId',
-  targetKey: 'gameId',
-});
-
-db.Keyword = KeywordModel;
-db.Game = GameModel;
-db.PlayerGroup = PlayerGroupModel;
-
 db.sequelize = sequelize;
-
 db.Sequelize = Sequelize;
 
 // 모델
@@ -37,6 +17,9 @@ db.Notification = require("./Notification")(sequelize, Sequelize);
 db.Dm = require("./Dm")(sequelize, Sequelize);
 db.DmChat = require("./DmChat")(sequelize, Sequelize);
 db.Friend = require("./Friend")(sequelize, Sequelize);
+db.Keyword = require('./Keyword')(sequelize,Sequelize);
+db.Game = require('./Game')(sequelize,Sequelize);
+db.PlayerGroup = require('./PlayerGroup')(sequelize,Sequelize);
 
 // 관계 (함수 내부에 작성 바랍니당)
 const dataRelation = () => {
@@ -107,6 +90,19 @@ const dataRelation = () => {
   db.DmChat.belongsTo(db.Dm, {
     foreignKey: "dm_id",
     targetKey: "dm_id",
+  });
+
+  // Game-PlayerGroup
+  db.Game.hasMany(db.PlayerGroup, {
+    foreignKey: 'game_id',
+    sourceKey: 'game_id',
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  });
+
+  db.PlayerGroup.belongsTo(db.Game, {
+    foreignKey: 'game_id',
+    targetKey: 'game_id',
   });
 
 };
