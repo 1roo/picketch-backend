@@ -68,3 +68,63 @@ schemas:
         type: string
       userScore:
         type: integer
+
+  KeywordResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            word:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "keyword":
+              [
+                { "id": 1, "word": "레몬" },
+                { "id": 13, "word": "동물" },
+                { "id": 35, "word": "고양이" },
+                { "id": 49, "word": "산타클로스" },
+                { "id": 49, "word": "자동차" },
+              ],
+          },
+      }
+
+  ScoreResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        properties:
+          code:
+            type: string
+            example: "SU"
+          message:
+            type: string
+            example: "Success"
+          data:
+            type: object
+            properties:
+              score:
+                type: number
+                example: 85
+    example: { "code": "SU", "message": "Success", "data": { "score": 85 } }

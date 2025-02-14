@@ -1,6 +1,6 @@
 const PlayerGroup = (sequelize, DataTypes) => {
   return sequelize.define(
-    'playerGroup',
+    "playerGroup",
     {
       player_group_id: {
         type: DataTypes.INTEGER,
@@ -18,10 +18,10 @@ const PlayerGroup = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'player_group',
+      tableName: "player_group",
       freezeTableName: true,
       timestamps: false,
-    }
+    },
   );
 };
 

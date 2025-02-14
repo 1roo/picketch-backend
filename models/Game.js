@@ -1,7 +1,6 @@
-
-const Game = (sequelize,DataTypes) => {
+const Game = (sequelize, DataTypes) => {
   return sequelize.define(
-    'game',
+    "game",
     {
       game_id: {
         type: DataTypes.INTEGER,
@@ -16,10 +15,10 @@ const Game = (sequelize,DataTypes) => {
       round: { type: DataTypes.INTEGER(50), allowNull: false },
     },
     {
-      tableName: 'game',
+      tableName: "game",
       freezeTableName: true,
       timestamps: false,
-    }
+    },
   );
 };
 
