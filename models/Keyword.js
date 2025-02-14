@@ -1,10 +1,8 @@
-const { DataTypes } = require('sequelize');
-
-const Keyword = (sequelize) => {
+const Keyword = (sequelize,DataTypes) => {
   return sequelize.define(
-    'Keyword',
+    'keyword',
     {
-      keywordId: {
+      keyword_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
@@ -19,7 +17,6 @@ const Keyword = (sequelize) => {
       tableName: 'keyword',
       timestamps: false,
       freezeTableName: true,
-      underscored: true,
     }
   );
 };

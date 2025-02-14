@@ -1,20 +1,18 @@
-const { DataTypes } = require('sequelize');
-
-const PlayerGroup = (sequelize) => {
+const PlayerGroup = (sequelize, DataTypes) => {
   return sequelize.define(
-    'PlayerGroup',
+    'playerGroup',
     {
-      playerGroupId: {
+      player_group_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
       },
-      gameId: {
+      game_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      userId: {
+      user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -23,7 +21,6 @@ const PlayerGroup = (sequelize) => {
       tableName: 'player_group',
       freezeTableName: true,
       timestamps: false,
-      underscored: true,
     }
   );
 };

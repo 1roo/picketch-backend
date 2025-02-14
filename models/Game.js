@@ -1,10 +1,9 @@
-const { DataTypes } = require('sequelize');
 
-const Game = (sequelize) => {
+const Game = (sequelize,DataTypes) => {
   return sequelize.define(
-    'Game',
+    'game',
     {
-      gameId: {
+      game_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
@@ -12,7 +11,7 @@ const Game = (sequelize) => {
       },
       name: { type: DataTypes.STRING(30), allowNull: false },
       manager: { type: DataTypes.INTEGER, allowNull: false },
-      isLock: { type: DataTypes.BOOLEAN, allowNull: false },
+      is_lock: { type: DataTypes.BOOLEAN, allowNull: false },
       pw: { type: DataTypes.STRING(20), allowNull: true },
       round: { type: DataTypes.INTEGER(50), allowNull: false },
     },
@@ -20,7 +19,6 @@ const Game = (sequelize) => {
       tableName: 'game',
       freezeTableName: true,
       timestamps: false,
-      underscored: true,
     }
   );
 };
