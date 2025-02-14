@@ -1,0 +1,76 @@
+securitySchemes:
+  BearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+schemas:
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SF, DBE, VF, DN, AF, RF]
+      message:
+        type: string
+
+  SuccessResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+        example: "Success"
+
+  TokenResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+      hasProfile:
+        type: boolean
+      tokenType:
+        type: string
+      expirationTime:
+        type: integer
+
+  Profile:
+    type: object
+    required:
+      - nickname
+      - character
+      - regionId
+    properties:
+      nickname:
+        type: string
+        minLength: 2
+        maxLength: 20
+      character:
+        type: string
+      regionId:
+        type: integer
+
+  UserResponse:
+    type: object
+    properties:
+      socialType:
+        type: string
+      nickname:
+        type: string
+      character:
+        type: string
+      regionId:
+        type: integer
+      region:
+        type: string
+      userScore:
+        type: integer

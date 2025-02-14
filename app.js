@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const { sequelize } = require("./models");
 const indexRouter = require("./routes");
@@ -7,7 +7,8 @@ const session = require("express-session");
 const passport = require("passport");
 const passportConfig = require("./passport");
 const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./swaggerDef");
+// const swaggerSpec = require("./swaggerDef"); 파일 변경
+const swaggerDocument = YAML.load(path.join(__dirname, "./docs/swagger.yaml"));
 require("dotenv").config();
 
 const SERVER_PREFIX = "/api";
@@ -25,7 +26,7 @@ app.use(
 
 // Routes
 app.use(SERVER_PREFIX, indexRouter);
-app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
