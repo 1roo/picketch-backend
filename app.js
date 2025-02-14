@@ -1,18 +1,17 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const { sequelize } = require("./models");
 const indexRouter = require("./routes");
 const cors = require("cors");
-const session = require("express-session");
-const passport = require("passport");
-const passportConfig = require("./passport");
 const swaggerUi = require("swagger-ui-express");
-// const swaggerSpec = require("./swaggerDef"); 파일 변경
-const swaggerDocument = YAML.load(path.join(__dirname, "./docs/swagger.yaml"));
-require("dotenv").config();
+const YAML = require("yaml");
+const fs = require("fs");
+const path = require("path");
 
 const SERVER_PREFIX = "/api";
 const SWAGGER_URL = "/api-docs";
+const PORT = process.env.SERVER_PORT;
 
 // Middleware
 app.use(express.urlencoded({ extended: false }));
@@ -24,19 +23,64 @@ app.use(
   }),
 );
 
+function loadSwaggerFiles() {
+  try {
+    // 각 YAML 파일 읽기
+    const swaggerFile = fs.readFileSync(
+      path.join(__dirname, "./docs/swagger.yaml"),
+      "utf8",
+    );
+    const componentsFile = fs.readFileSync(
+      path.join(__dirname, "./docs/components/index.yaml"),
+      "utf8",
+    );
+    const authPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/auth.yaml"),
+      "utf8",
+    );
+
+    // YAML 파싱
+    const swaggerDoc = YAML.parse(swaggerFile);
+    const components = YAML.parse(componentsFile);
+    const authPaths = YAML.parse(authPathFile);
+
+    console.log("Loaded swagger.yaml:", swaggerDoc);
+    console.log("Loaded components:", components);
+    console.log("Loaded paths:", authPaths);
+
+    // 문서 병합
+    const mergedDoc = {
+      ...swaggerDoc,
+      components: {
+        schemas: components.schemas,
+        securitySchemes: components.securitySchemes,
+      },
+      paths: authPaths,
+    };
+
+    console.log("Merged Swagger document:", mergedDoc);
+    return mergedDoc;
+  } catch (error) {
+    console.error("Error loading Swagger files:", error);
+    throw error;
+  }
+}
+
+const swaggerDocument = loadSwaggerFiles();
+
 // Routes
 app.use(SERVER_PREFIX, indexRouter);
 app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ force: false, alter: true });
     console.log("DB connection success");
 
-    app.listen(process.env.SERVER_PORT, () => {
-      console.log(`Server is running on http://localhost:${process.env.SERVER_PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
       console.log(
-        `API documentation available at http://localhost:${process.env.SERVER_PORT}${SWAGGER_URL}`,
+        `API documentation available at http://localhost:${PORT}${SWAGGER_URL}`,
       );
     });
   } catch (error) {
