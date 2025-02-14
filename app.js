@@ -31,7 +31,7 @@ function loadSwaggerFiles() {
       "utf8",
     );
     const componentsFile = fs.readFileSync(
-      path.join(__dirname, "./docs/components/index.yaml"),
+      path.join(__dirname, "./docs/component/index.yaml"),
       "utf8",
     );
     const authPathFile = fs.readFileSync(
