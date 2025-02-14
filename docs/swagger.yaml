@@ -13,12 +13,3 @@ tags:
     description: 인증 관련 API
   - name: User
     description: 사용자 프로필 관련 API
-
-components:
-  $ref: "./components/index.yaml"
-
-paths:
-  /auth:
-    $ref: "./paths/auth.yaml"
-  /user:
-    $ref: "./paths/user.yaml"

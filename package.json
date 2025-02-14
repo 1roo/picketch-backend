@@ -21,6 +21,7 @@
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
     "socket.io": "^4.8.1",
+    "yaml": "^2.7.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
