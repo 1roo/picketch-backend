@@ -15,8 +15,10 @@ tags:
     description: 사용자 프로필 관련 API
 
 components:
-  $ref: './components/index.yaml'
+  $ref: "./components/index.yaml"
 
 paths:
-  $ref: './paths/auth.yaml'
-  $ref: './paths/user.yaml'
+  /auth:
+    $ref: "./paths/auth.yaml"
+  /user:
+    $ref: "./paths/user.yaml"
