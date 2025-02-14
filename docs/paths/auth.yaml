@@ -1,0 +1,152 @@
+/auth/refresh:
+  post:
+    tags:
+      - Auth
+    summary: 토큰 갱신
+    operationId: refreshToken
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              refreshToken:
+                type: string
+    responses:
+      "200":
+        description: 토큰 갱신 성공
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/TokenResponse"
+      "401":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+      "500":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+
+/auth/kakao:
+  post:
+    tags:
+      - Auth
+    summary: 카카오 로그인
+    operationId: kakaoLogin
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              accessToken:
+                type: string
+    responses:
+      "200":
+        description: 로그인 성공
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/TokenResponse"
+      "401":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+      "500":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+
+/auth/naver:
+  post:
+    tags:
+      - Auth
+    summary: 네이버 로그인
+    operationId: naverLogin
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              accessToken:
+                type: string
+    responses:
+      "200":
+        description: 로그인 성공
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/TokenResponse"
+      "401":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+      "500":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+
+/auth/google:
+  post:
+    tags:
+      - Auth
+    summary: 구글 로그인
+    operationId: googleLogin
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              accessToken:
+                type: string
+    responses:
+      "200":
+        description: 로그인 성공
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/TokenResponse"
+      "401":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+      "500":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"
+
+/auth/logout:
+  post:
+    tags:
+      - Auth
+    summary: 로그아웃
+    operationId: accountLogout
+    security:
+      - BearerAuth: []
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/SuccessResponse"
+      "400":
+        description: 이미 로그아웃됨
+        content:
+          application/json:
+            schema:
+              $ref: "./components/index.yaml#/schemas/Error"

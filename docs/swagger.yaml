@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: Catchmine Project API
+  description: 캐치마인드 프로젝트 "Picketch" API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+    description: 개발 서버
+
+tags:
+  - name: Auth
+    description: 인증 관련 API
+  - name: User
+    description: 사용자 프로필 관련 API
+
+components:
+  $ref: './components/index.yaml'
+
+paths:
+  $ref: './paths/auth.yaml'
+  $ref: './paths/user.yaml'
