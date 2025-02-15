@@ -1,16 +1,17 @@
 /**
  * API 성공 응답을 보내는 함수
  * @param {Response} res Express Response 객체
- * @param {Object|Array} data 응답 데이터
- * @param {string} message 성공 메시지
- * @param {number} statusCode HTTP 상태 코드
+ * @param {string} message 성공 메시지 (기본값: "Success")
+ * @param {Object|null} data 응답 데이터 (기본값: null)
+ * @param {number} statusCode HTTP 상태 코드 (기본값: 200)
  */
 
-// 성공
-exports.success = (res, data = null, message = "Success", statusCode = 200) => {
+// 성공 응답
+exports.success = (res, message = "Success", data = null, statusCode = 200) => {
   console.log(message, data);
+
   const response = {
-    status: "success",
+    code: "SU",
     message,
   };
 
@@ -24,97 +25,42 @@ exports.success = (res, data = null, message = "Success", statusCode = 200) => {
 /**
  * 서버 에러가 났을 때 실행될 코드 모음
  * @param {Response} res Express Response 객체
- * @param {Error} err 에러 객체
- * @param {string} errMsgInServer 서버 콘솔에 띄워줄 메시지
- * @param {string} errMsgInClient 클라이언트에게 보내줄 메시지
+ * @param {number} statusCode HTTP 상태 코드
+ * @param {string} code 에러 코드 (예: "DBE", "RF")
+ * @param {string} message 클라이언트에게 보낼 메시지
+ * @param {Error} [err] 에러 객체 (서버 로그용, 선택 사항)
  */
 
-// 서버 에러
-exports.serverError = (
-  res,
-  err,
-  errMsgInServer = "ERROR!",
-  errMsgInClient = "에러낫슈",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(500).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: err.code || "UNKNOWN_ERROR",
-  });
+// 공통 에러 응답 함수
+const sendErrorResponse = (res, statusCode, code, message, err) => {
+  if (err) console.error(`[${code}] ${message}`, err);
+  res.status(statusCode).json({ code, message });
 };
 
-// 유효성 검사 실패
-exports.validationError = (
-  res,
-  err,
-  errMsgInServer = "Validation Error",
-  errMsgInClient = "입력값이 올바르지 않습니다",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(400).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: "VALIDATION_ERROR",
-  });
-};
+// 데이터베이스 오류 (500)
+exports.databaseError = (res, err) =>
+  sendErrorResponse(res, 500, "DBE", "Database error.", err);
 
-// 인증 실패
-exports.authError = (
-  res,
-  err,
-  errMsgInServer = "Auth Error",
-  errMsgInClient = "로그인이 필요합니다",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(401).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: "AUTH_ERROR",
-  });
-};
+// 유효성 검사 실패 (400)
+exports.validationError = (res, err) =>
+  sendErrorResponse(res, 400, "VF", "Validation failed.", err);
 
-// 권한 없음
-exports.forbidden = (
-  res,
-  err,
-  errMsgInServer = "Forbidden Error",
-  errMsgInClient = "접근 권한이 없습니다",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(403).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: "FORBIDDEN",
-  });
-};
+// 중복 닉네임 오류 (400)
+exports.duplicateNickname = (res, err) =>
+  sendErrorResponse(res, 400, "DN", "Duplicated nickname.", err);
 
-// 리소스를 찾을 수 없음
-exports.notFound = (
-  res,
-  err,
-  errMsgInServer = "Not Found Error",
-  errMsgInClient = "요청하신 리소스를 찾을 수 없습니다",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(404).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: "NOT_FOUND",
-  });
-};
+// 인증 실패 (401) - Refresh Token 유효하지 않음
+exports.invalidRefreshToken = (res, err) =>
+  sendErrorResponse(res, 401, "RF", "Invalid refresh token.", err);
 
-// 중복 데이터 충돌
-exports.conflict = (
-  res,
-  err,
-  errMsgInServer = "Conflict Error",
-  errMsgInClient = "이미 존재하는 데이터입니다",
-) => {
-  console.error(errMsgInServer, err);
-  res.status(409).json({
-    status: "fail",
-    message: errMsgInClient,
-    error_code: "CONFLICT",
-  });
-};
+// 인증 실패 (401) - 로그인 실패
+exports.signInFailed = (res, err) =>
+  sendErrorResponse(res, 401, "SF", "Login information mismatch.", err);
+
+// 인증 실패 (401) - 권한 인증 실패
+exports.authorizationFailed = (res, err) =>
+  sendErrorResponse(res, 401, "AF", "Authorization Failed.", err);
+
+// 이미 로그아웃된 경우 (400)
+exports.alreadyLoggedOut = (res, err) =>
+  sendErrorResponse(res, 400, "AF", "Already logged out.", err);
