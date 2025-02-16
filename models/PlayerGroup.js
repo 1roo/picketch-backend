@@ -3,7 +3,7 @@ const PlayerGroup = (sequelize, DataTypes) => {
     "playerGroup",
     {
       player_group_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
@@ -21,6 +21,7 @@ const PlayerGroup = (sequelize, DataTypes) => {
       tableName: "player_group",
       freezeTableName: true,
       timestamps: false,
+      indexes: [{ unique: true, fields: ["user_id", "game_id"] }],
     },
   );
 };
