@@ -8,6 +8,8 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yaml");
 const fs = require("fs");
 const path = require("path");
+const http = require("http");
+const { socketHandler } = require("./socket/index");
 
 const SERVER_PREFIX = "/api";
 const SWAGGER_URL = "/api-docs";
@@ -82,12 +84,13 @@ const startServer = async () => {
     await sequelize.sync({ force: false, alter: true });
     console.log("DB connection success");
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(
         `API documentation available at http://localhost:${PORT}${SWAGGER_URL}`,
       );
     });
+    socketHandler(server);
   } catch (error) {
     console.error("DB connection failed", error);
     process.exit(1);

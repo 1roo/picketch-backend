@@ -3,7 +3,7 @@ const Keyword = (sequelize, DataTypes) => {
     "keyword",
     {
       keyword_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
