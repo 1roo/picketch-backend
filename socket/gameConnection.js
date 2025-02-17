@@ -1,58 +1,15 @@
 const db = require("../models");
-
-// 현재 진행중인 방 찾기
-const getActiveRoom = async (roomName, transaction) => {
-  const room = await db.Game.findOne({
-    where: {
-      name: roomName,
-      is_finish: 0,
-    },
-    transaction,
-  });
-  console.log("찾은 게임아이디", room.game_id);
-  return { room };
-};
-
-// 유저 방에 참가 처리
-const addUserToGameRoom = async (gameId, userId, transaction) => {
-  const addResult = await db.PlayerGroup.create(
-    {
-      game_id: gameId,
-      user_id: userId,
-    },
-    { transaction: transaction },
-  );
-  return { addResult };
-};
-
-// 유저가 참여중인 방 정보 db에서 삭제
-const deleteEnterRoomFromDB = async (gameId, userId, transaction) => {
-  const destroyResult = await db.PlayerGroup.destroy({
-    where: {
-      game_id: gameId,
-      user_id: userId,
-    },
-    transaction,
-  });
-  console.log("삭제결과는", destroyResult);
-  return { destroyResult };
-};
-
-// 남은 참가자 조회
-const getRestParticipants = async (room, transaction) => {
-  const currentPlayersResult = await db.PlayerGroup.findAll({
-    where: {
-      game_id: room.game_id,
-    },
-    include: [{ model: db.User, attribute: ["user_id", "nickname"] }],
-    raw: false,
-    transaction,
-  });
-  return { currentPlayersResult };
-};
+const {
+  getActiveRoom,
+  getRestParticipants,
+  addUserToGameRoom,
+  deleteEnterRoomFromDB,
+} = require("./gameUtils");
 
 // 게임 참가 처리 로직
-const joinGameRoom = async (io, socket, userInfo, roomName, inputPw) => {
+exports.joinGameRoomHandler = async (io, socket, userInfo, roomName, inputPw) => {
+  console.log("userInfo는", userInfo);
+  console.log("roomName는", roomName);
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
@@ -87,6 +44,7 @@ const joinGameRoom = async (io, socket, userInfo, roomName, inputPw) => {
     const { addResult } = await addUserToGameRoom(game_id, 55, transaction);
 
     const payload = {
+      type: "SUCCESS",
       message: "입장 성공.",
       data: {
         userId: "임시",
@@ -98,12 +56,13 @@ const joinGameRoom = async (io, socket, userInfo, roomName, inputPw) => {
     await transaction.commit();
 
     // 해당 방에 입장 처리
+    console.log("룸이름은", roomName);
     socket.join(roomName);
     userInfo[socket.id].roomName = roomName;
-
+    console.log("입장처리후 userInfo는", userInfo);
     console.log("게임방은 : ", socket.rooms);
     console.log("유저정보는 : ", userInfo);
-    socket.emit("receiveJoinGame", payload);
+    socket.emit("joinGame", payload);
   } catch (err) {
     console.log(err);
     await transaction.rollback();
@@ -117,22 +76,24 @@ const joinGameRoom = async (io, socket, userInfo, roomName, inputPw) => {
     }
 
     const payload = {
+      type: "FAIL",
       message: message,
       data: {
         userId: "임시",
         roomName: userInfo[socket.id].roomName,
       },
     };
-    socket.emit("receiveJoinGame", payload);
+    socket.emit("joinGame", payload);
   }
 };
 
 // 게임 퇴장 처리 로직
-const leaveGameRoom = async (io, socket, userInfo, isManualLeave = false) => {
+exports.leaveGameRoomHandler = async (io, socket, userInfo, isManualLeave = false) => {
+  console.log("퇴장 요청이 들어올때 userInfo", userInfo);
   const transaction = await db.sequelize.transaction();
   try {
     const roomName = userInfo[socket.id]?.roomName;
-    if (!roomName) throw new Error("방 이름정보가 없습니다.");
+    if (!roomName) throw new Error("방 정보가 없습니다.");
 
     // 같은 이름의 방 존재 여부 확인
     const { room } = await getActiveRoom(roomName, transaction);
@@ -158,8 +119,8 @@ const leaveGameRoom = async (io, socket, userInfo, isManualLeave = false) => {
     const payload = {
       message: `${userInfo[socket.id].nickname}님이 퇴장했습니다.`,
       data: {
-        userId: userInfo[socket.id].userId,
-        roomId: userInfo[socket.id].roomName,
+        userId: userInfo[socket.id].userId || null,
+        roomId: userInfo[socket.id].roomName || null,
         participantNick: participantNicks,
       },
     };
@@ -167,21 +128,26 @@ const leaveGameRoom = async (io, socket, userInfo, isManualLeave = false) => {
     // 퇴장이 발생한방 전체 알림(나 제외)
     socket.to(userInfo[socket.id].roomName).emit("updateParticipants", payload);
 
-    // userInfo에서도 삭제
-    socket.leave(userInfo[socket.id].roomName);
-    delete userInfo[socket.id];
-
     // 직접 퇴장 요청한 경우  퇴장 요청한 유저에게만 알림
     if (isManualLeave) {
-      socket.emit("receiveLeaveGame", {
+      socket.emit("leaveGame", {
+        type: "SUCCESS",
         message: "퇴장 처리되었습니다.",
         data: { userId, roomId: roomName },
       });
+      socket.leave(userInfo[socket.id].roomName);
+      userInfo[socket.id].roomName = null;
+    } else {
+      socket.leave(userInfo[socket.id].roomName);
+      delete userInfo[socket.id];
+      console.log("연결종료될때 userInfo", userInfo);
     }
   } catch (err) {
+    console.log(err);
     await transaction.rollback();
     if (isManualLeave) {
-      socket.emit("receiveLeaveGame", {
+      socket.emit("leaveGame", {
+        type: "FAIL",
         message: err.message,
         data: {
           userId: userInfo[socket.id]?.userId,
@@ -190,16 +156,4 @@ const leaveGameRoom = async (io, socket, userInfo, isManualLeave = false) => {
       });
     }
   }
-};
-
-exports.GameHandler = (io, socket, userInfo) => {
-  socket.on("sendJoinGame", async (roomName, inputPw) => {
-    await joinGameRoom(io, socket, userInfo, roomName, inputPw);
-  });
-  socket.on("disconnect", async () => {
-    await leaveGameRoom(io, socket, userInfo, false);
-  });
-  socket.on("sendLeaveGame", async () => {
-    await leaveGameRoom(io, socket, userInfo, true);
-  });
 };
