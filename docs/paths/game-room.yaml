@@ -1,0 +1,89 @@
+/game-room:
+  get:
+    tags:
+      - GameRoom
+    summary: 게임방 조회
+    operationId: getGameRoom
+    responses:
+      "200":
+        description: 게임방 조회 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameRoomResponse"
+      "400":
+        description: 유효하지 않은 유저
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  post:
+    tags:
+      - GameRoom
+    summary: 게임방 생성
+    operationId: addGameRoom
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GameRoom"
+    responses:
+      "200":
+        description: 게임방 생성 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효성 검사 실패
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+/game-room/{room_id}:
+  delete:
+    tags:
+      - GameRoom
+    summary: 게임방 생성
+    operationId: deleteGameRoom
+    parameters:
+      - name: room_id
+        in: path
+        required: true
+        description: 삭제할 게임방 ID
+        schema:
+          type: number
+    responses:
+      "200":
+        description: 게임방 삭제 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효하지 않은 게임방
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
