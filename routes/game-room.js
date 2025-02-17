@@ -1,5 +1,5 @@
 const gameRoomRouter = require("express").Router();
-const controller = require("../controllers/GameRoomController");
+const controller = require("../controllers/gameRoomController");
 
 gameRoomRouter.get("/", controller.getGameRoom);
 gameRoomRouter.post("/", controller.addGameRoom);

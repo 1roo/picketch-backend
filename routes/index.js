@@ -1,8 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const controller = require('../controllers/userController');
-const userRouter = require('./user');
-const gameRouter = require('./game');
+const controller = require("../controllers/userController");
+const userRouter = require("./user");
+const gameRouter = require("./game");
+const rankingRouter = require("./ranking");
+const friendRouter = require("./friend");
+const gameRoomRouter = require("./game-room");
 
 /**
  * @swagger
@@ -12,12 +15,21 @@ const gameRouter = require('./game');
  */
 
 // GET /api
-router.get('/', controller.getLogin);
+router.get("/", controller.getLogin);
 
 // /user
-router.use('/user', userRouter);
+router.use("/user", userRouter);
 
 // /game
-router.use('/game', gameRouter);
+router.use("/game", gameRouter);
+
+// /friend
+router.use("/friend", friendRouter);
+
+// /ranking
+router.use("/ranking", rankingRouter);
+
+// /game-room
+router.use("/game-room", gameRoomRouter);
 
 module.exports = router;
