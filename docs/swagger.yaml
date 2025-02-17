@@ -13,3 +13,9 @@ tags:
     description: 인증 관련 API
   - name: User
     description: 사용자 프로필 관련 API
+  - name: Friend
+    description: 사용자 친구 관련 API
+  - name: Ranking
+    description: 랭킹 관련 API
+  - name: GameRoom
+    description: 게임방 관련 API
