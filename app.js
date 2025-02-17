@@ -44,6 +44,16 @@ function loadSwaggerFiles() {
       path.join(__dirname, "./docs/paths/game.yaml"),
       "utf8",
     );
+    const friendPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/friend.yaml"),
+      "utf8",
+    );
+    const rankingPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/ranking.yaml"),
+      "utf8",
+    );
+    const gameRoomPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/game-room.yaml"),
     const userPathFile = fs.readFileSync(
       path.join(__dirname, "./docs/paths/user.yaml"),
       "utf8",
@@ -54,6 +64,9 @@ function loadSwaggerFiles() {
     const components = YAML.parse(componentsFile);
     const authPaths = YAML.parse(authPathFile);
     const gamePaths = YAML.parse(gamePathFile);
+    const friendPaths = YAML.parse(friendPathFile);
+    const rankingPaths = YAML.parse(rankingPathFile);
+    const gameRoomPaths = YAML.parse(gameRoomPathFile);
     const userPaths = YAML.parse(userPathFile);
 
     console.log("Loaded swagger.yaml:", swaggerDoc);
@@ -67,8 +80,14 @@ function loadSwaggerFiles() {
         schemas: components.schemas,
         securitySchemes: components.securitySchemes,
       },
-      paths: { ...authPaths, ...gamePaths, ...userPaths },
-    };
+      paths: {
+        ...authPaths,
+        ...gamePaths,
+        ...friendPaths,
+        ...rankingPaths,
+        ...gameRoomPaths,
+        ...userPaths
+      },
 
     console.log("Merged Swagger document:", mergedDoc);
     return mergedDoc;

@@ -304,6 +304,158 @@ schemas:
                 example: 85
     example: { "code": "SU", "message": "Success", "data": { "score": 85 } }
 
+  FriendResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      data:
+        type: object
+        friends:
+          type: array
+          properties:
+            friend_id:
+              type: integer
+            nickname:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "friends":
+              [
+                { "friend_id": 1, "nickname": "짱구" },
+                { "friend_id": 3, "nickname": "훈이" },
+                { "friend_id": 5, "nickname": "맹구" },
+                { "friend_id": 9, "nickname": "철수" },
+              ],
+          },
+      }
+
+  GameRoom:
+    type: object
+    required:
+      - roomName
+      - managerId
+      - round
+      - isLock
+      - pw
+    properties:
+      roomName:
+        type: string
+        minLength: 2
+        maxLength: 30
+        example: "1반 드루와"
+      managerId:
+        type: integer
+        example: 3
+      round:
+        type: integer
+        example: 2
+      isLock:
+        type: boolean
+      pw:
+        type: integer
+        minLength: 4
+        maxLength: 8
+        example: 0000
+
+  GameRoomResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            room_id:
+              type: integer
+            roomName:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "rooms":
+              [
+                { "room_id": 1, "roomName": "1반 드루와" },
+                { "room_id": 3, "roomName": "나보다 잘하는 사람?" },
+                { "room_id": 5, "roomName": "맞짱ㄱ" },
+                { "room_id": 9, "roomName": "같이 해요~" },
+              ],
+          },
+      }
+
+  RankingUserResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            user_id:
+              type: integer
+            nickname:
+              type: string
+            score:
+              type: integer
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "users":
+              [
+                { "user_id": 1, "nickname": "짱구", "score": 2930 },
+                { "user_id": 3, "nickname": "훈이", "score": 2905 },
+                { "user_id": 5, "nickname": "맹구", "score": 2850 },
+                { "user_id": 9, "nickname": "철수", "score": 2800 },
+              ],
+          },
+      }
+
+  RankingRegionResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            region_id:
+              type: integer
+            region:
+              type: string
+            score:
+              type: integer
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "regions":
+              [
+                { "region_id": 2, "region": "도봉구", "score": 29300 },
+                { "region_id": 3, "region": "성북구", "score": 25500 },
+                { "region_id": 4, "region": "강남구", "score": 23000 },
+                { "region_id": 8, "region": "서초구", "score": 22300 },
+              ],
+          },
+      }
+
 securitySchemes:
   bearerAuth:
     type: http

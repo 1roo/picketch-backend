@@ -1,0 +1,91 @@
+/friend:
+  get:
+    tags:
+      - Friend
+    summary: 친구 조회
+    operationId: getFriend
+    responses:
+      "200":
+        description: 친구 조회 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FriendResponse"
+      "400":
+        description: 유효하지 않은 유저
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+
+/friend/{friend_id}:
+  get:
+    tags:
+      - Friend
+    summary: 친구 추가
+    operationId: addFriend
+    parameters:
+      - name: friend_id
+        in: path
+        required: true
+        description: 추가할 친구 ID
+        schema:
+          type: number
+    responses:
+      "200":
+        description: 친구 추가 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효하지 않은 친구 ID
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+
+  delete:
+    tags:
+      - Friend
+    summary: 친구 삭제
+    operationId: deleteFriend
+    parameters:
+      - name: friend_id
+        in: path
+        required: true
+        description: 삭제할 친구 ID
+        schema:
+          type: number
+    responses:
+      "200":
+        description: 친구 삭제 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효하지 않은 친구 ID
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
