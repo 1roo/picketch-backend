@@ -8,6 +8,8 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yaml");
 const fs = require("fs");
 const path = require("path");
+const http = require("http");
+const { socketHandler } = require("./socket/index");
 
 const SERVER_PREFIX = "/api";
 const SWAGGER_URL = "/api-docs";
@@ -52,6 +54,8 @@ function loadSwaggerFiles() {
     );
     const gameRoomPathFile = fs.readFileSync(
       path.join(__dirname, "./docs/paths/game-room.yaml"),
+    const userPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/user.yaml"),
       "utf8",
     );
 
@@ -63,6 +67,7 @@ function loadSwaggerFiles() {
     const friendPaths = YAML.parse(friendPathFile);
     const rankingPaths = YAML.parse(rankingPathFile);
     const gameRoomPaths = YAML.parse(gameRoomPathFile);
+    const userPaths = YAML.parse(userPathFile);
 
     console.log("Loaded swagger.yaml:", swaggerDoc);
     console.log("Loaded components:", components);
@@ -81,8 +86,8 @@ function loadSwaggerFiles() {
         ...friendPaths,
         ...rankingPaths,
         ...gameRoomPaths,
+        ...userPaths
       },
-    };
 
     console.log("Merged Swagger document:", mergedDoc);
     return mergedDoc;
@@ -100,15 +105,16 @@ app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false, alter: true });
+    await sequelize.sync({ force: false });
     console.log("DB connection success");
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
       console.log(
         `API documentation available at http://localhost:${PORT}${SWAGGER_URL}`,
       );
     });
+    socketHandler(server);
   } catch (error) {
     console.error("DB connection failed", error);
     process.exit(1);

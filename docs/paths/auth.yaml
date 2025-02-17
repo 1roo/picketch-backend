@@ -3,150 +3,142 @@
     tags:
       - Auth
     summary: 토큰 갱신
-    operationId: refreshToken
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              refreshToken:
-                type: string
+            $ref: "#/components/schemas/RefreshTokenRequest"
     responses:
       "200":
         description: 토큰 갱신 성공
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/TokenResponse"
+              $ref: "#/components/schemas/RefreshTokenResponse"
       "401":
+        description: 유효하지 않은 Refresh Token
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/Error"
-      "500":
-        content:
-          application/json:
-            schema:
-              $ref: "#/component/schemas/Error"
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "RF"
+              message: "Invalid refresh token."
 
 /auth/kakao:
   post:
     tags:
       - Auth
     summary: 카카오 로그인
-    operationId: kakaoLogin
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              accessToken:
-                type: string
+            $ref: "#/components/schemas/SocialLoginRequest"
     responses:
       "200":
         description: 로그인 성공
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/TokenResponse"
+              $ref: "#/components/schemas/TokenResponse"
       "401":
+        description: 로그인 실패
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/Error"
-      "500":
-        content:
-          application/json:
-            schema:
-              $ref: "#/component/schemas/Error"
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "SF"
+              message: "Login information mismatch."
 
 /auth/naver:
   post:
     tags:
       - Auth
     summary: 네이버 로그인
-    operationId: naverLogin
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              accessToken:
-                type: string
+            $ref: "#/components/schemas/SocialLoginRequest"
     responses:
       "200":
         description: 로그인 성공
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/TokenResponse"
+              $ref: "#/components/schemas/TokenResponse"
       "401":
+        description: 로그인 실패
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/Error"
-      "500":
-        content:
-          application/json:
-            schema:
-              $ref: "#/component/schemas/Error"
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "SF"
+              message: "Login information mismatch."
 
 /auth/google:
   post:
     tags:
       - Auth
     summary: 구글 로그인
-    operationId: googleLogin
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              accessToken:
-                type: string
+            $ref: "#/components/schemas/SocialLoginRequest"
     responses:
       "200":
         description: 로그인 성공
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/TokenResponse"
+              $ref: "#/components/schemas/TokenResponse"
       "401":
+        description: 로그인 실패
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/Error"
-      "500":
-        content:
-          application/json:
-            schema:
-              $ref: "#/component/schemas/Error"
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "SF"
+              message: "Login information mismatch."
 
 /auth/logout:
   post:
     tags:
       - Auth
     summary: 로그아웃
-    operationId: accountLogout
     security:
-      - BearerAuth: []
+      - bearerAuth: []
     responses:
       "200":
+        description: 로그아웃 성공
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/SuccessResponse"
+              $ref: "#/components/schemas/LogoutResponse"
       "400":
-        description: 이미 로그아웃됨
+        description: 이미 로그아웃된 상태
         content:
           application/json:
             schema:
-              $ref: "#/component/schemas/Error"
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "AF"
+              message: "Already logged out."
+      "401":
+        description: 인증 실패
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              code: "AF"
+              message: "Authorization Failed."
