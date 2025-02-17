@@ -150,8 +150,8 @@ exports.leaveGameRoomHandler = async (io, socket, userInfo, isManualLeave = fals
         type: "FAIL",
         message: err.message,
         data: {
-          userId: userInfo[socket.id]?.userId || null,
-          roomId: userInfo[socket.id]?.roomName || null,
+          userId: userInfo[socket.id]?.userId,
+          roomId: userInfo[socket.id]?.roomName,
         },
       });
     }
