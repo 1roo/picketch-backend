@@ -81,7 +81,7 @@ app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false, alter: true });
+    await sequelize.sync({ force: false });
     console.log("DB connection success");
 
     const server = app.listen(PORT, () => {
