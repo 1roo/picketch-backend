@@ -54,6 +54,8 @@ function loadSwaggerFiles() {
     );
     const gameRoomPathFile = fs.readFileSync(
       path.join(__dirname, "./docs/paths/game-room.yaml"),
+      "utf8",
+    );
     const userPathFile = fs.readFileSync(
       path.join(__dirname, "./docs/paths/user.yaml"),
       "utf8",
@@ -86,9 +88,9 @@ function loadSwaggerFiles() {
         ...friendPaths,
         ...rankingPaths,
         ...gameRoomPaths,
-        ...userPaths
+        ...userPaths,
       },
-
+    };
     console.log("Merged Swagger document:", mergedDoc);
     return mergedDoc;
   } catch (error) {
