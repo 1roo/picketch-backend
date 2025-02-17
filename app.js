@@ -44,12 +44,17 @@ function loadSwaggerFiles() {
       path.join(__dirname, "./docs/paths/game.yaml"),
       "utf8",
     );
+    const userPathFile = fs.readFileSync(
+      path.join(__dirname, "./docs/paths/user.yaml"),
+      "utf8",
+    );
 
     // YAML 파싱
     const swaggerDoc = YAML.parse(swaggerFile);
     const components = YAML.parse(componentsFile);
     const authPaths = YAML.parse(authPathFile);
     const gamePaths = YAML.parse(gamePathFile);
+    const userPaths = YAML.parse(userPathFile);
 
     console.log("Loaded swagger.yaml:", swaggerDoc);
     console.log("Loaded components:", components);
@@ -62,7 +67,7 @@ function loadSwaggerFiles() {
         schemas: components.schemas,
         securitySchemes: components.securitySchemes,
       },
-      paths: { ...authPaths, ...gamePaths },
+      paths: { ...authPaths, ...gamePaths, ...userPaths },
     };
 
     console.log("Merged Swagger document:", mergedDoc);
@@ -81,7 +86,7 @@ app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false, alter: true });
+    await sequelize.sync({ force: false });
     console.log("DB connection success");
 
     const server = app.listen(PORT, () => {
