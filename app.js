@@ -9,7 +9,6 @@ const YAML = require("yaml");
 const fs = require("fs");
 const path = require("path");
 const http = require("http");
-const server = http.createServer(app);
 const { socketHandler } = require("./socket/index");
 
 const SERVER_PREFIX = "/api";
@@ -82,7 +81,7 @@ app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ force: false, alter: true });
     console.log("DB connection success");
 
     const server = app.listen(PORT, () => {
