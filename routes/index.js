@@ -1,26 +1,19 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/userController");
+const authRouter = require("./auth");
 const userRouter = require("./user");
 const gameRouter = require("./game");
 const rankingRouter = require("./ranking");
 const friendRouter = require("./friend");
 const gameRoomRouter = require("./game-room");
 
-/**
- * @swagger
- * tags:
- *   name: Users
- *   description: 유저 추가 수정 삭제 조회
- */
+// /api/auth
+router.use("/auth", authRouter);
 
-// GET /api
-router.get("/", controller.getLogin);
-
-// /user
+// /api/user
 router.use("/user", userRouter);
 
-// /game
+// /api/game
 router.use("/game", gameRouter);
 
 // /friend
