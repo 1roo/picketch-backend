@@ -1,0 +1,50 @@
+/ranking/user:
+  get:
+    tags:
+      - Ranking
+    summary: 유저 랭킹 조회
+    operationId: getRankingUser
+    responses:
+      "200":
+        description: 유저 랭킹 조회 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankingUserResponse"
+      "400":
+        description: 유효하지 않은 유저
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+/ranking/region:
+  get:
+    tags:
+      - Ranking
+    summary: 지역 랭킹 조회
+    operationId: getRankingRegion
+    responses:
+      "200":
+        description: 지역별 랭킹 조회 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankingRegionResponse"
+      "400":
+        description: 유효하지 않은 유저
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+      "500":
+        description: 서버 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
