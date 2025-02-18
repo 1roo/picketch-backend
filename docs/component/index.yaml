@@ -304,12 +304,28 @@ schemas:
                 example: 85
     example: { "code": "SU", "message": "Success", "data": { "score": 85 } }
 
+  Friend:
+    type: object
+    required:
+      - friendId
+      - friendNickname
+    properties:
+      friendId:
+        type: integer
+        example: 3
+      friendNickname:
+        type: string
+        example: "맹구"
+
   FriendResponse:
     type: object
     properties:
       code:
         type: string
         example: "SU"
+      message:
+        type: string
+        example: "Success"
       data:
         type: object
         friends:
@@ -322,6 +338,7 @@ schemas:
     example:
       {
         "code": "SU",
+        "message": "Success",
         "data":
           {
             "friends":
@@ -368,6 +385,9 @@ schemas:
       code:
         type: string
         example: "SU"
+      message:
+        type: string
+        example: "Success"
       data:
         type: object
         rooms:
@@ -380,14 +400,15 @@ schemas:
     example:
       {
         "code": "SU",
+        "message": "Success",
         "data":
           {
             "rooms":
               [
-                { "room_id": 1, "roomName": "1반 드루와" },
-                { "room_id": 3, "roomName": "나보다 잘하는 사람?" },
-                { "room_id": 5, "roomName": "맞짱ㄱ" },
-                { "room_id": 9, "roomName": "같이 해요~" },
+                { "room_id": 1, "roomName": "1반 드루와", "is_lock": "true" },
+                { "room_id": 3, "roomName": "나보다 잘하는 사람?", "is_lock": "false" },
+                { "room_id": 5, "roomName": "맞짱ㄱ", "is_lock": "true" },
+                { "room_id": 9, "roomName": "같이 해요~", "is_lock": "true" },
               ],
           },
       }
@@ -398,6 +419,9 @@ schemas:
       code:
         type: string
         example: "SU"
+      message:
+        type: string
+        example: "Success"
       data:
         type: object
         rooms:
@@ -412,9 +436,10 @@ schemas:
     example:
       {
         "code": "SU",
+        "message": "Success",
         "data":
           {
-            "users":
+            "userRanking":
               [
                 { "user_id": 1, "nickname": "짱구", "score": 2930 },
                 { "user_id": 3, "nickname": "훈이", "score": 2905 },
@@ -430,6 +455,9 @@ schemas:
       code:
         type: string
         example: "SU"
+      message:
+        type: string
+        example: "Success"
       data:
         type: object
         rooms:
@@ -444,9 +472,10 @@ schemas:
     example:
       {
         "code": "SU",
+        "message": "Success",
         "data":
           {
-            "regions":
+            "regionRanking":
               [
                 { "region_id": 2, "region": "도봉구", "score": 29300 },
                 { "region_id": 3, "region": "성북구", "score": 25500 },
