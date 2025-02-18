@@ -110,10 +110,15 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "static", "naverTest.html"));
 });
 
+sequelize
+  .authenticate()
+  .then(() => console.log("데이터베이스 연결 성공!"))
+  .catch((err) => console.error("데이터베이스 연결 실패:", err));
+
 // Server
 const startServer = async () => {
   try {
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ force: true });
     console.log("DB connection success");
 
     const server = app.listen(PORT, () => {

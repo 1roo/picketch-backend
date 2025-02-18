@@ -9,11 +9,11 @@ const PlayerGroup = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       game_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
       },
       user_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
       },
     },

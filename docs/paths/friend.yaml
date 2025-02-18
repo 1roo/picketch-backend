@@ -18,12 +18,16 @@
             schema:
               $ref: "#/components/schemas/Error"
       "500":
-        description: 서버 에러
+        description: 데이터 베이스 에러
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/Error"
-
+            example:
+              databaseError:
+                value:
+                  code: "DBE"
+                  message: "Database error."
 
 /friend/{friend_id}:
   get:
@@ -51,12 +55,22 @@
           application/json:
             schema:
               $ref: "#/components/schemas/Error"
+            examples:
+              validationFailed:
+                value:
+                  code: "VF"
+                  message: "Validation failed."
       "500":
-        description: 서버 에러
+        description: 데이터베이스 에러
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/Error"
+            example:
+              databaseError:
+                value:
+                  code: "DBE"
+                  message: "Database error."
 
   delete:
     tags:
@@ -83,9 +97,19 @@
           application/json:
             schema:
               $ref: "#/components/schemas/Error"
+            examples:
+              validationFailed:
+                value:
+                  code: "VF"
+                  message: "Validation failed."
       "500":
-        description: 서버 에러
+        description: 데이터베이스 에러
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/Error"
+            example:
+              databaseError:
+                value:
+                  code: "DBE"
+                  message: "Database error."

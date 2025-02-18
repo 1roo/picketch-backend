@@ -16,13 +16,13 @@ router.use("/user", userRouter);
 // /api/game
 router.use("/game", gameRouter);
 
-// /friend
+// api/friend
 router.use("/friend", friendRouter);
 
-// /ranking
+// api/ranking
 router.use("/ranking", rankingRouter);
 
-// /game-room
+// api/game-room
 router.use("/game-room", gameRoomRouter);
 
 module.exports = router;
