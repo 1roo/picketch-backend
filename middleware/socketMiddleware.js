@@ -29,13 +29,17 @@ exports.authSocketMiddleware = async (socket, next) => {
     //     return next();
     //   }
     // });
-    socket.userId = 3;
+    // socket.userId = 3;
+    socket.userId = Number(token);
 
     // user_id값의 실제 유저 존재 여부 확인(토큰 변조)
     const user = await db.User.findByPk(socket.userId);
     if (!user) {
       return next(new Error("존재하지 않는 유저입니다."));
     }
+    const { nickname, user_id } = user;
+    socket.user = { nickname: nickname, userId: user_id };
+    console.log("조회유저는", socket.user);
     return next();
   } catch (err) {
     // 에러발생시 클라이언트에서 connect_error 이벤트로 소켓 연결 실패 수신

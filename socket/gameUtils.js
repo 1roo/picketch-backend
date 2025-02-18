@@ -1,16 +1,16 @@
 const db = require("../models");
+const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
-// 현재 진행중인 방 찾기
-exports.getActiveRoom = async (roomName, transaction) => {
-  const room = await db.Game.findOne({
+// 현재 만들어져있는 방 여부 확인
+exports.getActiveRoom = async (gameId, transaction) => {
+  const game = await db.Game.findOne({
     where: {
-      name: roomName,
+      game_Id: gameId,
       is_finish: 0,
     },
     transaction,
   });
-  console.log("찾은 게임아이디", room.game_id);
-  return { room };
+  return { game };
 };
 
 // 유저가 방에 참가중인지 확인
@@ -22,7 +22,7 @@ exports.checkValidRoom = async (gameId, userId, transaction) => {
     },
   });
 
-  return { checkResult };
+  return checkResult;
 };
 
 // 유저 방에 참가 처리
@@ -51,14 +51,119 @@ exports.deleteEnterRoomFromDB = async (gameId, userId, transaction) => {
 };
 
 // 남은 참가자 조회
-exports.getRestParticipants = async (room, transaction) => {
+exports.getRestParticipants = async (game, transaction) => {
   const currentPlayersResult = await db.PlayerGroup.findAll({
     where: {
-      game_id: room.game_id,
+      game_id: game.game_id,
     },
     include: [{ model: db.User, attribute: ["user_id", "nickname"] }],
     raw: false,
     transaction,
   });
-  return { currentPlayersResult };
+  return currentPlayersResult;
+};
+
+// 모델 인스턴스에서 참가자 정보만 map
+exports.formatParticipantData = (playerInstances) => {
+  return playerInstances.map((playerInstance) => {
+    return {
+      participantId: playerInstance.user.user_id,
+      participantNick: playerInstance.user.nickname,
+    };
+  });
+};
+
+// socketUserInfo 유저 정보 넣기
+exports.editPlayerToUsersInfo = (socketId, userId, nickname, gameId) => {
+  if (!socketUsersInfo[socketId]) {
+    socketUsersInfo[socketId] = {};
+  }
+  if (userId !== undefined) {
+    socketUsersInfo[socketId].userId = userId;
+  }
+  if (nickname !== undefined) {
+    socketUsersInfo[socketId].nickname = nickname;
+  }
+  if (gameId !== undefined) {
+    socketUsersInfo[socketId].gameId = gameId;
+  }
+};
+
+// socketUserInfo 유저 정보 조회
+exports.getPlayerFromUserInfo = (socketId) => {
+  const { userId, nickname, gameId } = socketUsersInfo[socketId];
+  return { userId, nickname, gameId };
+};
+
+// socketUserInfo[socket.id] 삭제
+exports.deletePlayerUsersInfo = (socketId) => {
+  delete socketUsersInfo[socketId];
+};
+
+// socketGamesInfo 유저 정보 넣기
+exports.addPlayerToGameInfo = (gameId, userId, nickname) => {
+  if (!socketGamesInfo[gameId]) {
+    socketGamesInfo[gameId] = {
+      currentTurn: 0,
+      currentRound: 1,
+      limitRound: null,
+      players: [],
+    };
+  }
+  console.log("gameInfo 변경할때", socketGamesInfo[gameId]);
+  if (socketGamesInfo[gameId]) {
+    const isExist = socketGamesInfo[gameId].players.some(
+      (player) => player.userId === userId,
+    );
+    if (!isExist) {
+      socketGamesInfo[gameId].players.push({
+        userId: userId,
+        nickname: nickname,
+        score: 0,
+        ready: false,
+      });
+    }
+  }
+};
+
+exports.getPlayerReadyFromGameInfo = (gameId) => {
+  const playersInfo = socketGamesInfo[gameId];
+  if (playersInfo) {
+    const playersReadyInfo = playersInfo.players.map((player) => {
+      return {
+        userId: player.userId,
+        nickname: player.nickname,
+        ready: player.ready,
+      };
+    });
+    return playersReadyInfo;
+  }
+};
+
+exports.toggleReadyGameInfo = (gameId, userId) => {
+  const playersInfo = socketGamesInfo[gameId];
+  if (playersInfo) {
+    const changedPlayerInfo = playersInfo.players.map((player) => {
+      console.log("플레이어정보는", player);
+      if (player.userId === userId) {
+        console.log("일치하는 플레이어");
+        return { ...player, ready: !player.ready };
+      }
+      return player;
+    });
+    console.log("ready 바뀐 값", changedPlayerInfo);
+    playersInfo.players = [...changedPlayerInfo];
+  }
+};
+
+exports.deletePlayerFromGameInfo = (gameId, userId) => {
+  if (socketGamesInfo[gameId]) {
+    const changedPlayer = socketGamesInfo[gameId].players.filter(
+      (player) => player.userId !== userId,
+    );
+    socketGamesInfo[gameId] = {
+      ...socketGamesInfo[gameId],
+      players: changedPlayer,
+    };
+  }
 };
