@@ -2,11 +2,12 @@ const socketIO = require("socket.io");
 const { joinGameRoomHandler, leaveGameRoomHandler } = require("./gameConnection");
 const { gameChatHandler } = require("./gameChat");
 const { authSocketMiddleware } = require("../middleware/socketMiddleware");
+const { socketUsersInfo, socketGamesInfo } = require("./gameStore");
+const { editPlayerToUsersInfo } = require("./gameUtils");
+const { startGameHandler, readyGameHandler } = require("./gameSetup");
 
 let io;
-// {[socket_id] : { nickname : string, user_id: string, roomName :string}
-// userId는 socket.userId로 저장
-const userInfo = {};
+
 function socketHandler(server) {
   io = socketIO(server, {
     cors: {
@@ -22,32 +23,33 @@ function socketHandler(server) {
     console.log("연결 클라이언트 소켓 id는 ", socket.id);
     console.log("연결 클라이언트 user id는 ", socket.userId);
 
-    // user_id에 맞는 유저의 정보 메모리에 저장
-    if (!userInfo[socket.id]) {
-      userInfo[socket.id] = {};
-      userInfo[socket.id].userId = socket.userId;
-    }
-
-    console.log(userInfo);
+    // 소켓연결 성공 시 user_id에 맞는 유저의 정보 메모리에 저장
+    editPlayerToUsersInfo(socket.id, socket.user.userId, socket.user.nickname);
+    console.log("socketUsersInfo", socketUsersInfo);
+    console.log("socketGamesInfo은", socketGamesInfo);
 
     // 연결 테스트 확인용 임시 작성
     socket.emit("message", socket.id);
 
     // 게임방 입장
-    socket.on("joinGame", async (roomName, inputPw) => {
-      await joinGameRoomHandler(io, socket, userInfo, roomName, inputPw);
+    socket.on("joinGame", async (payload) => {
+      await joinGameRoomHandler(io, socket, payload);
+    });
+    // 게임 시작
+    socket.on("readyGame", async () => {
+      await readyGameHandler(io, socket);
     });
     // 게임방 퇴장
     socket.on("leaveGame", async () => {
-      await leaveGameRoomHandler(io, socket, userInfo, true);
+      await leaveGameRoomHandler(io, socket, true);
     });
     // 게임방 채팅
     socket.on("sendGameMessage", async (payload) => {
-      await gameChatHandler(io, socket, userInfo, payload);
+      await gameChatHandler(io, socket, payload);
     });
     // 연결 종료
     socket.on("disconnect", async () => {
-      await leaveGameRoomHandler(io, socket, userInfo, false);
+      await leaveGameRoomHandler(io, socket, false);
     });
   });
 }
