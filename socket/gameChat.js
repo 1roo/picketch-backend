@@ -1,5 +1,5 @@
 const { socketUsersInfo, socketGamesInfo } = require("./gameStore");
-const { getActiveRoom, checkValidRoom, getPlayerFromUserInfo } = require("./gameUtils");
+const { checkValidRoom, getPlayerFromUsersInfo, getGameRoom } = require("./gameUtils");
 
 exports.gameChatHandler = async (io, socket, payload) => {
   // 게임 채팅 보내기
@@ -8,18 +8,23 @@ exports.gameChatHandler = async (io, socket, payload) => {
   console.log("채팅메세지보낼때 socketGamesInfo", socketGamesInfo);
 
   const { message } = payload;
-  const { userId, nickname, gameId } = getPlayerFromUserInfo(socket.id);
+  const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   try {
     // 메세지 페이로드가 없을때
     if (!message) {
       throw new Error("메세지가 존재 하지 않습니다.");
     }
 
+    // 메세지 유효한 타입이 아닐때
+    if (typeof message !== "string") {
+      throw new Error("message가 문자열이 아닙니다.");
+    }
+
     // 참가중인 방이 있는지 확인
     if (!gameId) throw new Error("참가중인 방이 없습니다.");
 
-    // 해당방이 존재하는지 확인
-    const { game } = await getActiveRoom(gameId);
+    // 종료되지 않은 방이 존재하는지 확인
+    const game = await getGameRoom(gameId, false);
     if (!game) throw new Error("존재하지 않는 방입니다.");
 
     const { game_id, name, manager, is_lock, pw, round, is_finish } = game;

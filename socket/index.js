@@ -25,8 +25,6 @@ function socketHandler(server) {
 
     // 소켓연결 성공 시 user_id에 맞는 유저의 정보 메모리에 저장
     editPlayerToUsersInfo(socket.id, socket.user.userId, socket.user.nickname);
-    console.log("socketUsersInfo", socketUsersInfo);
-    console.log("socketGamesInfo은", socketGamesInfo);
 
     // 연결 테스트 확인용 임시 작성
     socket.emit("message", socket.id);
@@ -35,9 +33,13 @@ function socketHandler(server) {
     socket.on("joinGame", async (payload) => {
       await joinGameRoomHandler(io, socket, payload);
     });
-    // 게임 시작
+    // 게임 준비
     socket.on("readyGame", async () => {
       await readyGameHandler(io, socket);
+    });
+    // 게임 시작
+    socket.on("startGame", async () => {
+      await startGameHandler(io, socket);
     });
     // 게임방 퇴장
     socket.on("leaveGame", async () => {

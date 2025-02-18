@@ -3,9 +3,9 @@ exports.socketUsersInfo = {};
 
 // {
 //   [game_id] : {
-//     currentTurn : 0
-//     currentRound : 2
-//     limitRound  : 8,
+//     currentTurn : 0 // 누구차례인지
+//     currentRound : 2 // 현재라운드 / 전체라운드중(4턴) - players 한바퀴 순서 다 돌면 currentRound +1
+//     limitRound  : 4, // 요청할때 받는 값
 //     players : [
 //       {
 //         userId : 1,
