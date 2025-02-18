@@ -25,6 +25,7 @@ app.use(
   }),
 );
 
+// Swagger
 function loadSwaggerFiles() {
   try {
     // 각 YAML 파일 읽기
@@ -84,6 +85,11 @@ const swaggerDocument = loadSwaggerFiles();
 app.use(SERVER_PREFIX, indexRouter);
 app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "static", "naverTest.html"));
+});
+
+// Server
 const startServer = async () => {
   try {
     await sequelize.sync({ force: false });
