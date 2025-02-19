@@ -10,12 +10,12 @@ const PlayerGroup = (sequelize, DataTypes) => {
         comment: "고유 게임 참여 그룹 id",
       },
       game_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
         comment: "고유 생성 게임 id",
       },
       user_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
         comment: "고유 사용자 id",
       },
