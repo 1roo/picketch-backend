@@ -103,6 +103,7 @@ function loadSwaggerFiles() {
 const swaggerDocument = loadSwaggerFiles();
 
 // Routes
+
 app.use(SERVER_PREFIX, indexRouter);
 app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

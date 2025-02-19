@@ -1,7 +1,8 @@
 const gameRoomRouter = require("express").Router();
-const controller = require("../controllers/gameRoomController");
+const gameRoomController = require("../controllers/gameRoomController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-gameRoomRouter.get("/", controller.getGameRoom);
-gameRoomRouter.post("/", controller.addGameRoom);
-gameRoomRouter.delete("/", controller.deleteGameRoom);
+gameRoomRouter.get("/", authMiddleware, gameRoomController.getGameRoom);
+gameRoomRouter.post("/", authMiddleware, gameRoomController.addGameRoom);
+gameRoomRouter.delete("/", authMiddleware, gameRoomController.deleteGameRoom);
 module.exports = gameRoomRouter;

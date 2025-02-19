@@ -1,7 +1,8 @@
 const rankingRouter = require("express").Router();
-const controller = require("../controllers/rankingController");
+const rankingController = require("../controllers/rankingController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-rankingRouter.get("/user", controller.getRankingUser);
-rankingRouter.get("/region", controller.getRankingRegion);
+rankingRouter.get("/user", authMiddleware, rankingController.getRankingUser);
+rankingRouter.get("/region", authMiddleware, rankingController.getRankingRegion);
 
 module.exports = rankingRouter;

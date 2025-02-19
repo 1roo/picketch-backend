@@ -68,6 +68,8 @@ const dataRelation = () => {
   db.Friend.belongsTo(db.User, {
     foreignKey: "user_id",
     targetKey: "user_id",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   });
 
   // Dm
@@ -120,4 +122,19 @@ const dataRelation = () => {
 
 dataRelation();
 
+db.User.afterCreate(async (user, options) => {
+  await updateRegionScore(user.region_id);
+});
+
+db.User.afterUpdate(async (user, options) => {
+  if (user.changed("user_score")) {
+    await updateRegionScore(user.region_id);
+  }
+});
+async function updateRegionScore(region_id) {
+  console.log(">>>>>>>>>>>>>>>>>");
+  const regionScore = await db.User.sum("user_score", { where: { region_id } });
+
+  await db.Region.update({ region_score: regionScore || 0 }, { where: { region_id } });
+}
 module.exports = db;
