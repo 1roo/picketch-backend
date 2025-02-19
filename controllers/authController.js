@@ -27,7 +27,7 @@ const generateTokens = (user) => {
 
 const authController = {
   // 토큰 갱신
-  refresh: async (req, res) => {
+  refreshToken: async (req, res) => {
     try {
       const { refreshToken } = req.body;
       const auth = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
@@ -82,6 +82,10 @@ const authController = {
           social_type: "KAKAO",
         },
       });
+
+      if (user && user.is_deleted) {
+        return signInFailed(res, "탈퇴한 계정입니다.");
+      }
 
       if (!user) {
         try {
@@ -148,6 +152,10 @@ const authController = {
         },
       });
 
+      if (user && user.is_deleted) {
+        return signInFailed(res, "탈퇴한 계정입니다.");
+      }
+
       if (!user) {
         try {
           user = await User.create({
@@ -188,11 +196,11 @@ const authController = {
         tokenType: "Bearer",
         expirationTime: 3600,
       });
-    } catch (error) {
-      if (error.response || error.request) {
-        return signInFailed(res, error);
+    } catch (err) {
+      if (err.response || err.request) {
+        return signInFailed(res, err);
       }
-      databaseError(res, error);
+      databaseError(res, err);
     }
   },
 
@@ -214,6 +222,10 @@ const authController = {
         },
       });
 
+      if (user && user.is_deleted) {
+        return signInFailed(res, "탈퇴한 계정입니다.");
+      }
+
       if (!user) {
         try {
           user = await User.create({
@@ -224,8 +236,8 @@ const authController = {
             character: "default_character.png", // 기본 캐릭터
             region_id: 1, // 기본 지역 ID
           });
-        } catch (error) {
-          return databaseError(res, error);
+        } catch (err) {
+          return databaseError(res, err);
         }
       }
 
@@ -249,23 +261,19 @@ const authController = {
         tokenType: "Bearer",
         expirationTime: 3600,
       });
-    } catch (error) {
-      if (error.response || error.request) {
-        return signInFailed(res, error);
+    } catch (err) {
+      if (err.response || err.request) {
+        return signInFailed(res, err);
       }
-      databaseError(res, error);
+      databaseError(res, err);
     }
   },
 
   // 로그아웃
-  logout: async (req, res) => {
+  accountLogout: async (req, res) => {
     try {
       const userId = req.user.user_id;
       const user = await User.findByPk(userId);
-
-      if (!user) {
-        return authorizationFailed(res);
-      }
 
       if (user.status === "OFFLINE") {
         return alreadyLoggedOut(res);
@@ -277,8 +285,8 @@ const authController = {
       );
 
       success(res, "Success");
-    } catch (error) {
-      databaseError(res, error);
+    } catch (err) {
+      databaseError(res, err);
     }
   },
 };
