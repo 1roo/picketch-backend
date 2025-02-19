@@ -6,7 +6,7 @@ exports.getGameRoom = async (gameId, isFinish, transaction) => {
   console.log("isActive는", isFinish);
   const game = await db.Game.findOne({
     where: {
-      game_Id: gameId,
+      game_id: gameId,
       is_finish: Number(isFinish),
     },
     transaction,
@@ -115,9 +115,11 @@ exports.deletePlayerUsersInfo = (socketId) => {
 exports.addPlayerToGamesInfo = (gameId, userId, nickname, manager) => {
   if (!socketGamesInfo[gameId]) {
     socketGamesInfo[gameId] = {
-      currentTurn: 0,
-      currentRound: 1,
-      limitRound: null,
+      gameStatus: {
+        currentTurn: 1,
+        currentRound: 1,
+        maxRound: null,
+      },
       players: [],
     };
   }
@@ -137,13 +139,13 @@ exports.addPlayerToGamesInfo = (gameId, userId, nickname, manager) => {
   }
 };
 
-// socketGamesInfo 게임진행정보에서 사용자의 ready상태 가져오기
+// socketGamesInfo에서 gameId에 해당하는 게임정보 가져오기
 exports.getGamesInfoByGameId = (gameId) => {
   const playersInfo = socketGamesInfo[gameId];
   return playersInfo;
 };
 
-// socketGamesInfo[gameID]에서 ready 정보만 가져오기
+// socketGamesInfo[gameID]에서 ready 정보만 보이도록 formatting
 exports.formatReadyData = (playersInfo) => {
   if (playersInfo) {
     const playersReadyInfo = playersInfo.players.map((player) => {
@@ -157,11 +159,16 @@ exports.formatReadyData = (playersInfo) => {
   }
 };
 
+// socketGamesInfo[gameID].players에서 전체 유저가 ready===true 여부 확인
+exports.checkAllReady = (playersReadyInfo) => {
+  return playersReadyInfo.every((playerInfo) => playerInfo.ready === true);
+};
+
 // socketGamesInfo 게임진행정보에서 사용자의 ready상태 토글
 exports.toggleReadyGamesInfo = (gameId, userId) => {
-  const playersInfo = socketGamesInfo[gameId];
-  if (playersInfo) {
-    const changedPlayerInfo = playersInfo.players.map((player) => {
+  const gameInfo = socketGamesInfo[gameId];
+  if (gameInfo) {
+    const changedPlayerInfo = gameInfo.players.map((player) => {
       console.log("플레이어정보는", player);
       if (player.userId === userId) {
         console.log("일치하는 플레이어");
@@ -170,11 +177,27 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
       return player;
     });
     console.log("ready 바뀐 값", changedPlayerInfo);
-    playersInfo.players = [...changedPlayerInfo];
+    gameInfo.players = [...changedPlayerInfo];
   }
 };
 
-exports.setupGameFromGamesInfo = (gameId) => {};
+// 게임 시작시 게임방 설정값 세팅 변경
+exports.setGameFromGamesInfo = ({ gameId, currentRound, currentTurn, maxRound }) => {
+  const gameInfo = socketGamesInfo[gameId];
+  if (gameInfo) {
+    gameInfo.gameStatus = {
+      ...gameInfo.gameStatus,
+      ...(currentRound !== undefined && { currentRound: currentRound }),
+      ...(currentRound !== undefined && { currentTurn: currentTurn }),
+      ...(currentRound !== undefined && { maxRound: maxRound }),
+    };
+
+    gameInfo.gameStatus.currentRound = currentRound;
+    gameInfo.gameStatus.currentTurn = currentTurn;
+    gameInfo.gameStatus.maxRound = maxRound;
+    return gameInfo;
+  }
+};
 
 // socketGamesInfo에서 해당 사용자 정보 삭제
 exports.deletePlayerFromGamesInfo = (gameId, userId) => {
@@ -189,11 +212,18 @@ exports.deletePlayerFromGamesInfo = (gameId, userId) => {
   }
 };
 
+exports.deleteGameFromGamesInfo = (gameId) => {
+  if (socketGamesInfo[gameId]) {
+    delete socketGamesInfo[gameId];
+  }
+};
+
 // 방장 변경
 exports.changeManagerOnLeave = async (nextUserId, gameId, transaction) => {
   if (!nextUserId) {
     // 방장 혼자 있을때
     await exports.updateGameRoom(gameId, { is_finish: 1 }, transaction);
+
     return { newManager: null, gameIsFinish: true };
   } else {
     // 남은 유저가 있을때

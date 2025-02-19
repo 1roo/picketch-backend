@@ -38,6 +38,7 @@ exports.gameChatHandler = async (io, socket, payload) => {
       senderId: userId,
       senderNick: nickname,
       gameMessage: message,
+      //채팅보낼때 정답여부 체크해서 보냄
       isAnswer: true,
     };
 

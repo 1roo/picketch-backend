@@ -7,6 +7,8 @@ const {
   getGamesInfoByGameId,
   formatReadyData,
   getGameRoom,
+  checkAllReady,
+  setGameFromGamesInfo,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -27,9 +29,13 @@ exports.readyGameHandler = async (io, socket) => {
     // 레디 상태 토글
     toggleReadyGamesInfo(gameId, userId);
 
-    // 전체 유저의 ready 상태
+    // 전체 유저의 ready 상태 조회
     const playersInfo = getGamesInfoByGameId(gameId);
+    console.log("해당 게임의 정보", playersInfo);
     const playersReadyInfo = formatReadyData(playersInfo);
+    console.log("전체 유저 레디상태", playersReadyInfo);
+    const isAllReady = checkAllReady(playersReadyInfo);
+    console.log("전체 유저가 레디되었나?", isAllReady);
 
     const readyStatusRes = {
       type: "SUCCESS",
@@ -57,13 +63,11 @@ exports.readyGameHandler = async (io, socket) => {
 
 exports.startGameHandler = async (io, socket) => {
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
-  getGame;
+
   try {
     // 내가 참가중인 방인지 확인
     const checkResult = await checkValidRoom(gameId, userId);
     if (!checkResult) throw new Error("참가 중인 방이 아닙니다.");
-
-    // 전체 유저의 준비상태를 체크
 
     // 방장만 누르는지 체크
     const game = await getGameRoom(gameId, false);
@@ -72,12 +76,39 @@ exports.startGameHandler = async (io, socket) => {
       throw new Error("방장만 시작할 수 있습니다.");
     }
 
+    // 전체 유저의 준비상태를 체크
+    const playersInfo = getGamesInfoByGameId(game_id);
+    const playersReadyInfo = formatReadyData(playersInfo);
+    const isAllReady = checkAllReady(playersReadyInfo);
+
+    if (!isAllReady) {
+      throw new Error("전체 유저가 Ready 상태가 아닙니다.");
+    }
+
     // 스타트를 누르면 게임을 하기위한 세팅값 설정
-    // 라운드, 최대라운드
-    // const game = await ActiveRoom(gameId);
+    const maxRound = playersReadyInfo.length * round;
+    const changedSettingGameInfo = setGameFromGamesInfo({ gameId, maxRound });
+    const startStatusRes = {
+      type: "SUCCESS",
+      message: `게임 시작 성공`,
+      data: {
+        gameId: gameId,
+        ...changedSettingGameInfo,
+      },
+    };
+    console.log("게임 시작할때 세팅값변경후", startStatusRes);
+    io.to(gameId).emit("startGame", startStatusRes);
   } catch (err) {
     console.log(err);
-    socket.to(gameId).emit("startGame");
+    const startStatusRes = {
+      type: "ERROR",
+      message: err.message,
+      data: {
+        userId: userId,
+        gameId: gameId,
+      },
+    };
+    socket.emit("startGame", startStatusRes);
   }
 };
 

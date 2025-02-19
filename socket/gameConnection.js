@@ -12,12 +12,14 @@ const {
   deletePlayerFromGamesInfo,
   getGameRoom,
   changeManagerOnLeave,
+  deleteGameFromGamesInfo,
 } = require("./gameUtils");
 
 // 게임 참가 처리 로직
 exports.joinGameRoomHandler = async (io, socket, payload) => {
   const { gameId: joinGameId, gameName, inputPw } = payload;
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
+  console.log(joinGameId, gameName, inputPw);
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
@@ -161,6 +163,9 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
       console.log("변경된 매니저1", updatedGame);
       console.log("변경된 매니저2", updatedGame.manager);
       manager = updatedGame.manager; // updatedGame에서 최신 매니저 정보 가져오기
+
+      // 다음 방장유저가 없으면 socketGamesInfo[gameId] 키 삭제
+      if (!newManager) deleteGameFromGamesInfo(gameId);
     }
 
     await transaction.commit();
@@ -187,12 +192,12 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
 
       socket.leave(gameId);
       editPlayerToUsersInfo(socket.id, undefined, undefined, null);
+      deletePlayerFromGamesInfo(gameId, userId);
     } else {
       socket.leave(gameId);
       deletePlayerUsersInfo(socket.id);
+      deletePlayerFromGamesInfo(gameId, userId);
     }
-
-    deletePlayerFromGamesInfo(gameId, userId);
 
     // 퇴장이 발생한방 전체 알림(나 제외)
     socket.to(gameId).emit("updateParticipants", payload);
