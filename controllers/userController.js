@@ -1,5 +1,4 @@
-const { User, Region, Sequelize } = require("../models");
-const { Op } = Sequelize;
+const { User, Region } = require("../models");
 const {
   success,
   duplicateNickname,
@@ -86,7 +85,14 @@ const userController = {
         nest: true,
       });
 
-      success(res, "Success");
+      success(res, "Success", {
+        socialType: user.social_type,
+        nickname: user.nickname,
+        character: user.character,
+        regionId: user.region_id,
+        region: user.region?.region,
+        userScore: user.user_score || 0,
+      });
     } catch (err) {
       databaseError(res, err);
     }
