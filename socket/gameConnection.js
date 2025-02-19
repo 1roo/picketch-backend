@@ -89,7 +89,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     io.to(game_id).emit("updateParticipants", updateParticipantsRes);
 
     editPlayerToUsersInfo(socket.id, userId, nickname, joinGameId);
-    addPlayerToGamesInfo(game_id, userId, nickname);
+    addPlayerToGamesInfo(game_id, userId, nickname, manager);
     console.log("입장처리후 usersInfo는", socketUsersInfo);
     console.log("입장처리후 gamesInfo는", socketGamesInfo);
     console.log("입장처리후 gamesInfo는", socketGamesInfo[game_id]);

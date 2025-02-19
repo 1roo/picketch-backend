@@ -2,12 +2,12 @@ const db = require("../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인
-exports.getGameRoom = async (gameId, isActive, transaction) => {
-  console.log("isActive는", isActive);
+exports.getGameRoom = async (gameId, isFinish, transaction) => {
+  console.log("isActive는", isFinish);
   const game = await db.Game.findOne({
     where: {
       game_Id: gameId,
-      is_finish: Number(isActive),
+      is_finish: Number(isFinish),
     },
     transaction,
   });
@@ -112,7 +112,7 @@ exports.deletePlayerUsersInfo = (socketId) => {
 };
 
 // socketGamesInfo 유저 정보 넣기
-exports.addPlayerToGamesInfo = (gameId, userId, nickname) => {
+exports.addPlayerToGamesInfo = (gameId, userId, nickname, manager) => {
   if (!socketGamesInfo[gameId]) {
     socketGamesInfo[gameId] = {
       currentTurn: 0,
@@ -131,15 +131,20 @@ exports.addPlayerToGamesInfo = (gameId, userId, nickname) => {
         userId: userId,
         nickname: nickname,
         score: 0,
-        ready: false,
+        ready: manager === userId ? true : false,
       });
     }
   }
 };
 
 // socketGamesInfo 게임진행정보에서 사용자의 ready상태 가져오기
-exports.getPlayerReadyFromGamesInfo = (gameId) => {
+exports.getGamesInfoByGameId = (gameId) => {
   const playersInfo = socketGamesInfo[gameId];
+  return playersInfo;
+};
+
+// socketGamesInfo[gameID]에서 ready 정보만 가져오기
+exports.formatReadyData = (playersInfo) => {
   if (playersInfo) {
     const playersReadyInfo = playersInfo.players.map((player) => {
       return {
