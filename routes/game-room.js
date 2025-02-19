@@ -4,5 +4,5 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 gameRoomRouter.get("/", authMiddleware, gameRoomController.getGameRoom);
 gameRoomRouter.post("/", authMiddleware, gameRoomController.addGameRoom);
-gameRoomRouter.delete("/", authMiddleware, gameRoomController.deleteGameRoom);
+gameRoomRouter.delete("/:room_id", authMiddleware, gameRoomController.deleteGameRoom);
 module.exports = gameRoomRouter;

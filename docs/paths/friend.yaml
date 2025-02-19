@@ -76,7 +76,7 @@
   get:
     tags:
       - Friend
-    summary: 친구 요청
+    summary: 친구 요청 승인
     operationId: acceptFriendRequest
     parameters:
       - name: sender_id
@@ -119,7 +119,7 @@
   get:
     tags:
       - Friend
-    summary: 친구 요청
+    summary: 친구 요청 거절
     operationId: rejectFriendRequest
     parameters:
       - name: sender_id

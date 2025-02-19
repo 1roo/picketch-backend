@@ -42,6 +42,7 @@ VALUES
 ('askdfkl', 'KAKAO', '엄마', 'default_character.png', 10, 780, 'OFFLINE',NOW(),NOW()),
 ('kfjierjiweroio', 'NAVER', '흰둥이', 'default_character.png', 5, 90, 'IN_GAME',NOW(),NOW());
 
+UPDATE user set user_score = user_score+20 WHERE user_id=5;
 INSERT INTO `notification`(`from_user_id`,`user_id`,`notification_type`,response_status,`content`,create_date,`updatedAt`)
 VALUES
 (1,10,'FRIEND_REQUEST','PENDING','훈이님이 친구 요청을 보냈습니다.',NOW(),NOW()),

@@ -13,9 +13,10 @@ const Game = (sequelize, DataTypes) => {
       is_lock: { type: DataTypes.BOOLEAN, allowNull: false },
       pw: { type: DataTypes.STRING(20), allowNull: true },
       round: { type: DataTypes.INTEGER(50), allowNull: false },
-      is_finish: {
+      is_waiting: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: true,
       },
     },
     {

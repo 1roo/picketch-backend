@@ -131,6 +131,7 @@ db.User.afterUpdate(async (user, options) => {
     await updateRegionScore(user.region_id);
   }
 });
+
 async function updateRegionScore(region_id) {
   console.log(">>>>>>>>>>>>>>>>>");
   const regionScore = await db.User.sum("user_score", { where: { region_id } });

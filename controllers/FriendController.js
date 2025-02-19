@@ -4,7 +4,6 @@ const { databaseError, validationError, success } = require("../utils/common");
 // 친구 조회
 exports.getFriend = async (req, res) => {
   try {
-    console.log(req.user.user_id);
     const user = req.user.user_id;
     const getFriends = await db.Friend.findAll({
       where: { user_id: user },
