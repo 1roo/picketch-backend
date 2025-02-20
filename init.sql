@@ -1,3 +1,4 @@
+-- Active: 1732688614523@@127.0.0.1@3306@picketch
 CREATE DATABASE picketch
     DEFAULT CHARACTER SET = 'utf8mb4';
 

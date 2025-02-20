@@ -41,7 +41,7 @@ exports.getRandomKeyword = async (req, res) => {
     const room = await db.Game.findOne({
       where: {
         name: roomName,
-        is_finish: false,
+        is_waiting: true,
       },
     });
 
@@ -128,66 +128,5 @@ exports.setFinalScore = async (req, res) => {
     console.log(err);
     await transaction.rollback();
     sendResponse(res, err.code, err.status, err.message);
-  }
-};
-
-exports.enterRoom = async (req, res) => {
-  const { roomId, inputPw } = req.params;
-  console.log("실행", roomId, inputPw);
-
-  const transaction = await db.sequelize.transaction();
-
-  try {
-    const RoomResult = await db.Game.findOne({
-      where: {
-        name: roomId,
-      },
-      transaction: transaction,
-    });
-
-    // 존재하지 않는 방일때
-    if (!RoomResult) {
-      await transaction.commit();
-      return res.status(400).json("존재하지 않는 방id입니다.");
-    }
-
-    // 게임방 정원확인
-    const { game_id, name, manager, is_lock, pw, round } = RoomResult;
-    console.log("findRoomResult", game_id, name, manager, is_lock, pw, round);
-    const currentPlayersResult = await db.PlayerGroup.findAll({
-      where: {
-        game_id: game_id,
-      },
-      raw: true,
-      transaction: transaction,
-    });
-    const userCount = currentPlayersResult.length;
-    console.log("유저카운트는", userCount);
-
-    if (userCount >= 8) {
-      await transaction.commit();
-      return res.json("입장 인원 수 초과");
-    }
-
-    if (is_lock && inputPw !== pw) {
-      await transaction.commit();
-      return res.json("비밀번호가 일치하지 않습니다.");
-    }
-
-    // 입장된 유저 컬럼 생성
-    await db.PlayerGroup.create(
-      {
-        game_id: game_id,
-        user_id: 55,
-      },
-      { transaction: transaction },
-    );
-
-    await transaction.commit();
-    res.json("입장 성공");
-  } catch (err) {
-    await transaction.rollback();
-    console.log(err.message);
-    sendResponse(res, 500, err.message);
   }
 };
