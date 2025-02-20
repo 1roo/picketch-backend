@@ -18,10 +18,11 @@ const Game = (sequelize, DataTypes) => {
       is_lock: { type: DataTypes.BOOLEAN, allowNull: false, comment: "비밀번호 유무" },
       pw: { type: DataTypes.STRING(20), allowNull: true, comment: "비밀번호" },
       round: { type: DataTypes.INTEGER(50), allowNull: false, comment: "라운드 수" },
-      is_finish: {
+      is_waiting: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        comment: "종료된 게임 여부",
+        defaultValue: true,
+        comment: "시작 대기중인 게임 여부",
       },
     },
     {

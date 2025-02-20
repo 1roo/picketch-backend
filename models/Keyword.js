@@ -12,6 +12,7 @@ const Keyword = (sequelize, DataTypes) => {
       keyword: {
         type: DataTypes.STRING(50),
         allowNull: false,
+        comment: "키워드 내용",
       },
     },
     {
