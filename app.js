@@ -103,9 +103,11 @@ function loadSwaggerFiles() {
 const swaggerDocument = loadSwaggerFiles();
 
 // Routes
+
 app.use(SERVER_PREFIX, indexRouter);
 app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+// 토큰 테스트 페이지
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "static", "naverTest.html"));
 });

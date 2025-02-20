@@ -29,28 +29,28 @@
                   code: "DBE"
                   message: "Database error."
 
-/friend/{friend_id}:
+/friend/request/{friend_id}:
   get:
     tags:
       - Friend
-    summary: 친구 추가
-    operationId: addFriend
+    summary: 친구 요청
+    operationId: acceptFriendRequest
     parameters:
       - name: friend_id
         in: path
         required: true
-        description: 추가할 친구 ID
+        description: 친추 요청 보낼 친구 ID
         schema:
           type: number
     responses:
       "200":
-        description: 친구 추가 성공
+        description: 친추 요청 성공
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/SuccessResponse"
       "400":
-        description: 유효하지 않은 친구 ID
+        description: 자기 자신에게 친구 요청 불가 / 이미 보낸 친구 요청
         content:
           application/json:
             schema:
@@ -72,6 +72,93 @@
                   code: "DBE"
                   message: "Database error."
 
+/friend/accept/{friend_id}:
+  get:
+    tags:
+      - Friend
+    summary: 친구 요청 승인
+    operationId: acceptFriendRequest
+    parameters:
+      - name: sender_id
+        in: path
+        required: true
+        description: 친추 보낸 친구 ID
+        schema:
+          type: number
+    responses:
+      "200":
+        description: 친구 추가 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효하지 않은 친구 요청 || 유효하지 않은 ID
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            examples:
+              validationFailed:
+                value:
+                  code: "VF"
+                  message: "Validation failed."
+      "500":
+        description: 데이터베이스 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              databaseError:
+                value:
+                  code: "DBE"
+                  message: "Database error."
+
+/friend/reject/{friend_id}:
+  get:
+    tags:
+      - Friend
+    summary: 친구 요청 거절
+    operationId: rejectFriendRequest
+    parameters:
+      - name: sender_id
+        in: path
+        required: true
+        description: 친추 보낸 친구 ID
+        schema:
+          type: number
+    responses:
+      "200":
+        description: 친추 거절 성공
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuccessResponse"
+      "400":
+        description: 유효하지 않은 친구 요청
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            examples:
+              validationFailed:
+                value:
+                  code: "VF"
+                  message: "Validation failed."
+      "500":
+        description: 데이터베이스 에러
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            example:
+              databaseError:
+                value:
+                  code: "DBE"
+                  message: "Database error."
+
+/friend/{friend_id}:
   delete:
     tags:
       - Friend
