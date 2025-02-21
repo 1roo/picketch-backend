@@ -258,11 +258,10 @@ const authController = {
         null,
         {
           params: {
-            grant_type: "authorization_code",
+            code,
             client_id: process.env.NAVER_CLIENT_ID,
             client_secret: process.env.NAVER_CLIENT_SECRET,
-            code,
-            state: process.env.NAVER_STATE,
+            grant_type: "authorization_code",
           },
         },
       );
