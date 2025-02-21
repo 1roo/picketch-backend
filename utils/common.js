@@ -63,4 +63,4 @@ exports.authorizationFailed = (res, err) =>
 
 // 이미 로그아웃된 경우 (400)
 exports.alreadyLoggedOut = (res, err) =>
-  sendErrorResponse(res, 400, "AF", "Already logged out.", err);
+  sendErrorResponse(res, 400, "AL", "Already logged out.", err);

@@ -68,7 +68,28 @@ const authController = {
   // 카카오 로그인
   kakaoLogin: async (req, res) => {
     try {
-      const { accessToken } = req.body;
+      const { code } = req.body;
+
+      if (!code) {
+        return signInFailed(res, "인가 코드(code)가 없습니다.");
+      }
+
+      const tokenResponse = await axios.post(
+        "https://kauth.kakao.com/oauth/token",
+        null,
+        {
+          params: {
+            code,
+            client_id: process.env.KAKAO_REST_API_KEY,
+            redirect_uri: process.env.KAKAO_REDIRECT_URI,
+            grant_type: "authorization_code",
+          },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        },
+      );
+
+      const accessToken = tokenResponse.data.access_token;
+      console.log("✅ 카카오 Access Token: ", accessToken);
 
       const response = await axios.get("https://kapi.kakao.com/v2/user/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -137,11 +158,30 @@ const authController = {
   // 구글 로그인
   googleLogin: async (req, res) => {
     try {
-      const { accessToken } = req.body;
+      const { code } = req.body;
 
-      const response = await axios.get(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${accessToken}`,
+      if (!code) {
+        return signInFailed(res, "인가 코드(code)가 없습니다.");
+      }
+
+      const tokenResponse = await axios.post(
+        "https://oauth2.googleapis.com/token",
+        null,
+        {
+          params: {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            grant_type: "authorization_code",
+          },
+        },
       );
+
+      const accessToken = tokenResponse.data.access_token;
+      console.log("✅ 구글 Access Token: ", accessToken);
+
+      const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
       const googleId = response.data.sub;
 
@@ -207,7 +247,28 @@ const authController = {
   // 네이버 로그인
   naverLogin: async (req, res) => {
     try {
-      const { accessToken } = req.body;
+      const { code } = req.body;
+
+      if (!code) {
+        return signInFailed(res, "인가 코드(code)가 없습니다.");
+      }
+
+      const tokenResponse = await axios.post(
+        "https://nid.naver.com/oauth2.0/token",
+        null,
+        {
+          params: {
+            grant_type: "authorization_code",
+            client_id: process.env.NAVER_CLIENT_ID,
+            client_secret: process.env.NAVER_CLIENT_SECRET,
+            code,
+            state: process.env.NAVER_STATE,
+          },
+        },
+      );
+
+      const accessToken = tokenResponse.data.access_token;
+      console.log("✅ 네이버 Access Token: ", accessToken);
 
       const response = await axios.get("https://openapi.naver.com/v1/nid/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
