@@ -131,7 +131,7 @@
             schema:
               $ref: "#/components/schemas/Error"
             example:
-              code: "AF"
+              code: "AL"
               message: "Already logged out."
       "401":
         description: 인증 실패

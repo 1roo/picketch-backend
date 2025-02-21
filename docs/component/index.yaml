@@ -16,7 +16,7 @@ schemas:
     properties:
       code:
         type: string
-        enum: [SF, DBE, VF, DN, AF, RF]
+        enum: [SF, DBE, VF, DN, AF, RF, AL]
       message:
         type: string
     examples:
@@ -44,6 +44,10 @@ schemas:
         value:
           code: "RF"
           message: "Invalid refresh token."
+      alreadyLoggedOut:
+        value:
+          code: "AL"
+          message: "Already logged out."
 
   # 토큰
   RefreshTokenRequest:
@@ -78,12 +82,12 @@ schemas:
   SocialLoginRequest:
     type: object
     required:
-      - accessToken
+      - code
     properties:
-      accessToken:
+      code:
         type: string
     example:
-      accessToken: "ya29.a0AfB_byC-..."
+      code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
 
   TokenResponse:
     type: object
