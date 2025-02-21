@@ -50,7 +50,7 @@
             schema:
               $ref: "#/components/schemas/SuccessResponse"
       "400":
-        description: 자기 자신에게 친구 요청 불가 / 이미 보낸 친구 요청
+        description: 이미 친구 || 자기 자신에게 친구 요청 불가 || 이미 보낸 요청 || 이미 받은 요청
         content:
           application/json:
             schema:
@@ -59,7 +59,7 @@
               validationFailed:
                 value:
                   code: "VF"
-                  message: "Validation failed."
+                  message: "이미 친구 || 자기 자신에게 친구 요청 불가 || 이미 보낸 요청 || 이미 받은 요청"
       "500":
         description: 데이터베이스 에러
         content:
@@ -102,7 +102,7 @@
               validationFailed:
                 value:
                   code: "VF"
-                  message: "Validation failed."
+                  message: "유효하지 않은 친구 요청 || 유효하지 않은 ID"
       "500":
         description: 데이터베이스 에러
         content:
