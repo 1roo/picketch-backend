@@ -1,6 +1,5 @@
 const { socketUsersInfo } = require("./gameStore");
 const {
-  getGamesInfoByGameId,
   getPlayerFromUsersInfo,
   isUserInGame,
   getGameInfoByGameId,
@@ -41,7 +40,7 @@ exports.drawCanvasHandler = async (io, socket, payload) => {
           brushColor,
         },
       };
-      io.to(gameId).emit("drawCanvas", drawDataRes);
+      io.of("/game").to(gameId).emit("drawCanvas", drawDataRes);
     } else {
       // 해당 유저가 그리기 권한이 없는 경우
       const drawDataRes = {
@@ -57,7 +56,7 @@ exports.drawCanvasHandler = async (io, socket, payload) => {
           brushColor,
         },
       };
-      io.to(gameId).emit("drawCanvas", drawDataRes);
+      io.of("/game").to(gameId).emit("drawCanvas", drawDataRes);
     }
   } catch (err) {
     console.log(err);
@@ -91,7 +90,7 @@ exports.clearCanvasHandler = async (io, socket) => {
         gameId: gameId,
         drawUserId: userId,
       };
-      io.to(gameId).emit("clearCanvas", clearRes);
+      io.of("/game").to(gameId).emit("clearCanvas", clearRes);
     }
   } catch (err) {
     console.log(err);

@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db

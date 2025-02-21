@@ -1,11 +1,6 @@
-const { socketUsersInfo, socketGamesInfo } = require("./gameStore");
 const {
   getPlayerFromUsersInfo,
-  checkValidRoom,
   toggleReadyGamesInfo,
-  getGamesInfoByGameId,
-  formatReadyData,
-  getGameRoom,
   checkAllReady,
   setGameFromGamesInfo,
   getGameInfoByGameId,
@@ -19,6 +14,7 @@ exports.readyGameHandler = async (io, socket) => {
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   const gameInfo = getGameInfoByGameId(gameId);
   const {
+    name,
     currentTurnId,
     currentRound,
     maxRound,
@@ -41,16 +37,28 @@ exports.readyGameHandler = async (io, socket) => {
     // 레디 상태 토글
     toggleReadyGamesInfo(gameId, userId);
 
-    const participants = getParticipants(gameId);
+    const newParticipants = getParticipants(gameId);
     const readyStatusRes = {
       type: "SUCCESS",
-      message: `${nickname}님의 ready 상태가 변경되었습니다.`,
+      message: "게임 준비 성공",
       data: {
-        players: participants,
+        userId: userId || null,
+        gameId: gameId || null,
+        gameName: name || null,
+        managerId: manager || null,
       },
     };
-
-    io.to(gameId).emit("readyGame", readyStatusRes);
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: gameId,
+        gameName: name || null,
+        players: newParticipants,
+      },
+    };
+    io.of("/game").to(gameId).emit("readyGame", readyStatusRes);
+    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     const readyStatusRes = {
@@ -119,13 +127,13 @@ exports.startGameHandler = async (io, socket) => {
     });
 
     // 순차적으로 키워드가져옴
-    const keyword = newKeywords[changedSettingGameInfo.currentRound];
+    const keyword = newKeywords[changedSettingGameInfo.currentRound - 1];
 
     // 턴순서인 유저에게만 키워드 보내주기
-    const clients = io.sockets.adapter.rooms.get(gameId);
+    const clients = io.of("/game").adapter.rooms.get(gameId);
     if (clients) {
       clients.forEach((socketId) => {
-        const playerSocket = io.sockets.sockets.get(socketId);
+        const playerSocket = io.of("/game").sockets.get(socketId);
         if (!playerSocket) return;
         const isTurn =
           getPlayerFromUsersInfo(playerSocket.id).userId === newCurrentTurnUserId;

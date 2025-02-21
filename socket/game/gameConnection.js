@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 const {
   addUserToGameRoom,
@@ -73,38 +73,34 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     // 입장 처리 socket room
     socket.join(joinGameId);
 
-    const joinGameRes = {
-      type: "SUCCESS",
-      message: "입장 처리 되었습니다.",
-      data: {
-        userId: userId,
-        gameId: joinGameId,
-        gameName: name,
-        isManager: manager === userId ? true : false,
-      },
-    };
-
     // 참가자 정보 조회
     const newParticipants = getParticipants(joinGameId);
-
-    const updateParticipantsRes = {
+    const joinGameRes = {
       type: "SUCCESS",
       message: `${nickname}님이 입장했습니다.`,
       data: {
         userId: userId || null,
-        gameId: userInfo.gameId,
+        gameId: joinGameId,
         gameName: name || null,
         managerId: manager,
+        // players: newParticipants,
+      },
+    };
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: joinGameId,
+        gameName: name || null,
         players: newParticipants,
       },
     };
-
     await transaction.commit();
 
     console.log("접속시 유저정보", socketUsersInfo[socket.id]);
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
-    io.to(joinGameId).emit("updateParticipants", updateParticipantsRes);
+    io.of("/game").to(joinGameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();
@@ -194,7 +190,7 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
 
     await transaction.commit();
     console.log("퇴장 후 useInfo는", socketUsersInfo[socket.id]);
-    const payload = {
+    const joinGameRes = {
       type: "SUCCESS",
       message: `${nickname}님이 퇴장했습니다.`,
       data: {
@@ -222,7 +218,18 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     console.log("게임정보는 ", socketGamesInfo[gameId]);
     console.log("유저정보는 ", socketUsersInfo[socket.id]);
     // 퇴장이 발생한방 전체 알림(나 제외)
-    socket.to(gameId).emit("updateParticipants", payload);
+    const newParticipants = getParticipants(gameId);
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: gameId,
+        gameName: name || null,
+        players: newParticipants,
+      },
+    };
+    io.of("/game").to(gameId).emit("leaveGame", joinGameRes);
+    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();

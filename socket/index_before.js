@@ -26,7 +26,7 @@ async function socketHandler(server) {
   // await expireGameFromDB();
   await syncGameInfoFromDB();
 
-  io.on("connect", async (socket) => {
+  io.on("connection", async (socket) => {
     // 소켓연결하는 유저 저장 (socketUserInfo)
     await syncUserInfoFromDB(socket, socket.userId);
 
