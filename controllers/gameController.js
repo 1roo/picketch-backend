@@ -20,39 +20,20 @@ const throwError = (code, status, message) => {
   throw error;
 };
 
-// {roomName : [keyword,...]}
-exports.randomKeywords = {};
-
 // 키워드 랜덤으로 추출하기
-
-// 같은 방id 기준 동일한 랜덤 키워드 응답
 exports.getRandomKeyword = async (req, res) => {
-  const count = Number(req.query.count);
-  const { roomName } = req.query;
-  const randomKeywords = exports.randomKeywords;
+  const { gameId } = req.query;
 
   try {
     // 유효성 검사
-    if (isNaN(count) || count < 1) {
+    if (typeof gameId !== "number") {
       throwError("VF", 400, "유효하지 않은 숫자입니다.");
     }
 
-    // 방 존재 여부 확인
-    const room = await db.Game.findOne({
-      where: {
-        name: roomName,
-        is_waiting: true,
-      },
-    });
+    // 해당방에 유저가 존재하는지 여부 확인
 
     if (!roomName || !room) {
       throwError("VF", 400, "방이 유효하지 않습니다.");
-    }
-
-    // 같은방에 생성된 랜덤 키워드가 있는 경우
-    if (randomKeywords[roomName]) {
-      const message = `키워드 ${randomKeywords[roomName].length}개 조회 성공`;
-      return sendResponse(res, "SU", 200, message, randomKeywords[roomName]);
     }
 
     // 같은방에 생성된 랜덤 키워드가 없는 경우
@@ -73,7 +54,7 @@ exports.getRandomKeyword = async (req, res) => {
 
 // 최종 점수 db 저장
 exports.setFinalScore = async (req, res) => {
-  const { roomName, playerNick } = req.body;
+  const { gameId, userId } = req.body;
   const score = Number(req.body.score);
 
   const transaction = await db.sequelize.transaction();
@@ -84,7 +65,7 @@ exports.setFinalScore = async (req, res) => {
     // 유저 조회 with 지역
     const userWithRegion = await db.User.findOne({
       where: {
-        nickname: playerNick,
+        user_id: userId,
       },
       include: {
         model: db.Region,
@@ -100,15 +81,15 @@ exports.setFinalScore = async (req, res) => {
 
     const regionId = userWithRegion.region.get("region_id");
 
-    // 유저 해당 지역별 score 점수 합산 update
+    // 유저 별 score 점수 합산 update
     const userScoreUpdate = await db.User.update(
       {
         user_score: db.Sequelize.literal(`user_score + ${score}`),
       },
-      { where: { nickname: playerNick }, transaction: transaction },
+      { where: { user_id: userId }, transaction: transaction },
     );
 
-    // 유저 해당 지역별 score 점수 합산 update
+    // 유저 지역별 score 점수 합산 update
     const regionScoreUpdate = await db.Region.update(
       {
         region_score: db.Sequelize.literal(`region_score + ${score}`),

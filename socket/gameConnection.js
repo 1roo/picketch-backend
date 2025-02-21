@@ -19,8 +19,9 @@ const {
 exports.joinGameRoomHandler = async (io, socket, payload) => {
   const { gameId: joinGameId, inputPw } = payload;
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
-  console.log("입장시 gameInfo ", socketGamesInfo);
-  console.log("입장시 userInfo ", socketUsersInfo);
+
+  console.log("소켓아이디", socket.id, typeof socket.id);
+  console.log("소켓아이디", typeof socket.id);
 
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
@@ -100,6 +101,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
 
     await transaction.commit();
 
+    console.log("접속시 유저정보", socketUsersInfo[socket.id]);
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
     io.to(joinGameId).emit("updateParticipants", updateParticipantsRes);
@@ -168,6 +170,8 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     // 방장이 퇴장할때, 다음 유저가 방장이 되도록 처리
     // 한명(방장)이 남았을때 퇴장하면 방 종료처리 (is_waiting => 0)
     const participants = getParticipants(gameId);
+
+    // 퇴장후 남아있는 다음 유저가 방장예정
     const nextUserId = participants[0]?.userId;
 
     if (manager === userId && isWaiting === true) {
@@ -189,7 +193,7 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     }
 
     await transaction.commit();
-
+    console.log("퇴장 후 useInfo는", socketUsersInfo[socket.id]);
     const payload = {
       type: "SUCCESS",
       message: `${nickname}님이 퇴장했습니다.`,
@@ -198,7 +202,7 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
         gameId: gameId,
         gameName: name || null,
         manager: manager,
-        participantInfos: participants,
+        players: participants,
       },
     };
 

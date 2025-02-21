@@ -19,7 +19,7 @@ async function socketHandler(server) {
     },
   });
 
-  // 소켓연결 전 유효한 토큰 검증 로직
+  // 소켓연결 토큰에서 user_id 추출
   io.use(authSocketMiddleware);
 
   // 서버 재실행시 기존 방 만료처리
@@ -27,6 +27,7 @@ async function socketHandler(server) {
   await syncGameInfoFromDB();
 
   io.on("connect", async (socket) => {
+    console.log("소켓아이디", socket.id, typeof socket.id);
     // 소켓연결하는 유저 저장 (socketUserInfo)
     await syncUserInfoFromDB(socket, socket.userId);
 
@@ -50,7 +51,7 @@ async function socketHandler(server) {
       await leaveGameRoomHandler(io, socket, true);
     });
     // 게임방 채팅
-    socket.on("sendGameMessage", async (payload) => {
+    socket.on("gameMessage", async (payload) => {
       await gameChatHandler(io, socket, payload);
     });
     // 게임방 그림 그리기
