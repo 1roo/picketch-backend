@@ -1,6 +1,6 @@
 const socketIO = require("socket.io");
 const { validationError } = require("../utils/common");
-const { dmChatSocket } = require("./dmChat/dmChat");
+const { dmChatSocket } = require("./dmChat");
 const { authSocketMiddleware } = require("../middleware/socketMiddleware");
 const { gameSocket } = require("./game/gameSocket");
 const { syncGameInfoFromDB } = require("./game/gameUtils");
