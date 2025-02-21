@@ -1,0 +1,492 @@
+schemas:
+  SuccessResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SF, DBE, VF, DN, AF, RF]
+      message:
+        type: string
+    examples:
+      signInFailed:
+        value:
+          code: "SF"
+          message: "Login information mismatch."
+      databaseError:
+        value:
+          code: "DBE"
+          message: "Database error."
+      validationFailed:
+        value:
+          code: "VF"
+          message: "Validation failed."
+      duplicateNickname:
+        value:
+          code: "DN"
+          message: "Duplicated nickname."
+      authorizationFailed:
+        value:
+          code: "AF"
+          message: "Authorization Failed."
+      refreshTokenInvalid:
+        value:
+          code: "RF"
+          message: "Invalid refresh token."
+
+  # 토큰
+  RefreshTokenRequest:
+    type: object
+    required:
+      - refreshToken
+    properties:
+      refreshToken:
+        type: string
+    example:
+      refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+  RefreshTokenResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+      accessToken:
+        type: string
+      expirationTime:
+        type: integer
+    example:
+      code: "SU"
+      message: "Success"
+      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      expirationTime: 3600
+
+  # 로그인
+  SocialLoginRequest:
+    type: object
+    required:
+      - accessToken
+    properties:
+      accessToken:
+        type: string
+    example:
+      accessToken: "ya29.a0AfB_byC-..."
+
+  TokenResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+      hasProfile:
+        type: boolean
+      tokenType:
+        type: string
+      expirationTime:
+        type: integer
+    example:
+      code: "SU"
+      message: "Success"
+      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      hasProfile: true
+      tokenType: "Bearer"
+      expirationTime: 3600
+
+  # 로그아웃
+  LogoutResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
+  # 프로필
+  ProfileRequest:
+    type: object
+    required:
+      - nickname
+      - character
+      - regionId
+    properties:
+      nickname:
+        type: string
+        minLength: 2
+        maxLength: 20
+      character:
+        type: string
+      regionId:
+        type: integer
+    example:
+      nickname: "캐치 버그"
+      character: "캐릭터1"
+      regionId: 1
+
+  ProfileResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+      data:
+        type: object
+        properties:
+          userId:
+            type: integer
+          nickname:
+            type: string
+          character:
+            type: string
+          regionId:
+            type: integer
+          region:
+            type: string
+          score:
+            type: integer
+    example:
+      code: "SU"
+      message: "Success"
+      data:
+        userId: 12345
+        nickname: "캐치 버그"
+        character: "캐릭터1"
+        regionId: 1
+        region: "서울"
+        score: 0
+
+  # 유저
+  UserResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+      data:
+        type: object
+        properties:
+          socialType:
+            type: string
+          nickname:
+            type: string
+          character:
+            type: string
+          regionId:
+            type: integer
+          region:
+            type: string
+          userScore:
+            type: integer
+
+  # 유저 수정
+  UpdateUserRequest:
+    type: object
+    properties:
+      nickname:
+        type: string
+        minLength: 2
+        maxLength: 15
+      character:
+        type: string
+    example:
+      nickname: "코드 캐처"
+      character: "캐릭터2"
+
+  UpdateUserResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
+  # 탈퇴
+  DeleteUserResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
+  KeywordResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+            word:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "data":
+          {
+            "keyword":
+              [
+                { "id": 1, "word": "레몬" },
+                { "id": 13, "word": "동물" },
+                { "id": 35, "word": "고양이" },
+                { "id": 49, "word": "산타클로스" },
+                { "id": 49, "word": "자동차" },
+              ],
+          },
+      }
+
+  ScoreResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        properties:
+          code:
+            type: string
+            example: "SU"
+          message:
+            type: string
+            example: "Success"
+          data:
+            type: object
+            properties:
+              score:
+                type: number
+                example: 85
+    example: { "code": "SU", "message": "Success", "data": { "score": 85 } }
+
+  Friend:
+    type: object
+    required:
+      - friendId
+      - friendNickname
+    properties:
+      friendId:
+        type: integer
+        example: 3
+      friendNickname:
+        type: string
+        example: "맹구"
+
+  FriendResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        friends:
+          type: array
+          properties:
+            friend_id:
+              type: integer
+            nickname:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "message": "Success",
+        "data":
+          {
+            "friends":
+              [
+                { "friend_id": 1, "nickname": "짱구" },
+                { "friend_id": 3, "nickname": "훈이" },
+                { "friend_id": 5, "nickname": "맹구" },
+                { "friend_id": 9, "nickname": "철수" },
+              ],
+          },
+      }
+
+  GameRoom:
+    type: object
+    required:
+      - roomName
+      - managerId
+      - round
+      - isLock
+      - pw
+    properties:
+      roomName:
+        type: string
+        minLength: 2
+        maxLength: 30
+        example: "1반 드루와"
+      managerId:
+        type: integer
+        example: 3
+      round:
+        type: integer
+        example: 2
+      isLock:
+        type: boolean
+      pw:
+        type: integer
+        minLength: 4
+        maxLength: 8
+        example: 0000
+
+  GameRoomResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            room_id:
+              type: integer
+            roomName:
+              type: string
+    example:
+      {
+        "code": "SU",
+        "message": "Success",
+        "data":
+          {
+            "rooms":
+              [
+                { "room_id": 1, "roomName": "1반 드루와", "is_lock": "true" },
+                { "room_id": 3, "roomName": "나보다 잘하는 사람?", "is_lock": "false" },
+                { "room_id": 5, "roomName": "맞짱ㄱ", "is_lock": "true" },
+                { "room_id": 9, "roomName": "같이 해요~", "is_lock": "true" },
+              ],
+          },
+      }
+
+  RankingUserResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            user_id:
+              type: integer
+            nickname:
+              type: string
+            score:
+              type: integer
+    example:
+      {
+        "code": "SU",
+        "message": "Success",
+        "data":
+          {
+            "userRanking":
+              [
+                { "user_id": 1, "nickname": "짱구", "score": 2930 },
+                { "user_id": 3, "nickname": "훈이", "score": 2905 },
+                { "user_id": 5, "nickname": "맹구", "score": 2850 },
+                { "user_id": 9, "nickname": "철수", "score": 2800 },
+              ],
+          },
+      }
+
+  RankingRegionResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        example: "SU"
+      message:
+        type: string
+        example: "Success"
+      data:
+        type: object
+        rooms:
+          type: array
+          properties:
+            region_id:
+              type: integer
+            region:
+              type: string
+            score:
+              type: integer
+    example:
+      {
+        "code": "SU",
+        "message": "Success",
+        "data":
+          {
+            "regionRanking":
+              [
+                { "region_id": 2, "region": "도봉구", "score": 29300 },
+                { "region_id": 3, "region": "성북구", "score": 25500 },
+                { "region_id": 4, "region": "강남구", "score": 23000 },
+                { "region_id": 8, "region": "서초구", "score": 22300 },
+              ],
+          },
+      }
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
