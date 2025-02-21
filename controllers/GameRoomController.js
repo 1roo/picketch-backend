@@ -1,5 +1,10 @@
 const db = require("../models");
-const { success, databaseError, validationError } = require("../utils/common");
+const {
+  success,
+  databaseError,
+  validationError,
+  validationErrorWithMessage,
+} = require("../utils/common");
 
 // 게임방 리스트 조회
 exports.getGameRoom = async (req, res) => {
@@ -21,12 +26,13 @@ exports.addGameRoom = async (req, res) => {
     // is_waiting 빼기 나중에
     const { roomName, round, isLock, pw, is_waiting } = req.body;
     // 유효성 검사
-    if (!roomName || !round || !isLock) return validationError(res, "필수 값 누락");
+    if (!roomName || !round || !isLock)
+      return validationErrorWithMessage(res, "필수 값 누락");
 
     const duplicateRoomName = await db.Game.findOne({
       where: { name: roomName },
     });
-    if (duplicateRoomName) return validationError(res, "중복된 방이름입니다.");
+    if (duplicateRoomName) return validationErrorWithMessage(res, "방이름 중복");
 
     await db.Game.create({
       name: roomName,
