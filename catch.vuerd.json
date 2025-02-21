@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -808,
-    "scrollLeft": -541,
+    "scrollTop": -471,
+    "scrollLeft": 0,
     "zoomLevel": 1,
     "show": 431,
     "database": 4,
@@ -104,12 +104,14 @@
         "name": "friend",
         "comment": "사용자 친구",
         "columnIds": [
+          "ZkN2zJ8FBCet4RVn0PvNm",
           "YmnRyI7Hmaw2ee2Wu3Vfw",
           "LuwI2Tj5Wf0pfeiYh-ETt",
           "ekT_aS1P1_Ykv-l1OzJKT"
         ],
         "seqColumnIds": [
           "gb-JXPSpKa_dcAZub3OTq",
+          "ZkN2zJ8FBCet4RVn0PvNm",
           "YmnRyI7Hmaw2ee2Wu3Vfw",
           "LuwI2Tj5Wf0pfeiYh-ETt",
           "ekT_aS1P1_Ykv-l1OzJKT"
@@ -123,7 +125,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1739868908789,
+          "updateAt": 1739943996909,
           "createAt": 1739328558751
         }
       },
@@ -1544,6 +1546,26 @@
           "updateAt": 1739868916634,
           "createAt": 1739868908789
         }
+      },
+      "ZkN2zJ8FBCet4RVn0PvNm": {
+        "id": "ZkN2zJ8FBCet4RVn0PvNm",
+        "tableId": "ltuS1Bbh61JJEzDNPeVtY",
+        "name": "id",
+        "comment": "",
+        "dataType": "",
+        "default": "",
+        "options": 10,
+        "ui": {
+          "keys": 1,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1739943991071,
+          "createAt": 1739943979825
+        }
       }
     },
     "relationshipEntities": {
@@ -1567,7 +1589,7 @@
             "YmnRyI7Hmaw2ee2Wu3Vfw"
           ],
           "x": 455.0211,
-          "y": 971.1127,
+          "y": 983.1127,
           "direction": 2
         },
         "meta": {
@@ -2383,6 +2405,15 @@
       -1,
       {
         "name": 1739868916632
+      }
+    ],
+    "ZkN2zJ8FBCet4RVn0PvNm": [
+      "tableColumnEntities",
+      1739943979823,
+      -1,
+      {
+        "name": 1739943987719,
+        "options(primaryKey)": 1739943991070
       }
     ]
   }
