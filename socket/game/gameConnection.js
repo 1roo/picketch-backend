@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 const {
   addUserToGameRoom,
@@ -19,8 +19,9 @@ const {
 exports.joinGameRoomHandler = async (io, socket, payload) => {
   const { gameId: joinGameId, inputPw } = payload;
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
-  console.log("입장시 gameInfo ", socketGamesInfo);
-  console.log("입장시 userInfo ", socketUsersInfo);
+
+  console.log("소켓아이디", socket.id, typeof socket.id);
+  console.log("소켓아이디", typeof socket.id);
 
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
@@ -72,37 +73,34 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     // 입장 처리 socket room
     socket.join(joinGameId);
 
-    const joinGameRes = {
-      type: "SUCCESS",
-      message: "입장 처리 되었습니다.",
-      data: {
-        userId: userId,
-        gameId: joinGameId,
-        gameName: name,
-        isManager: manager === userId ? true : false,
-      },
-    };
-
     // 참가자 정보 조회
     const newParticipants = getParticipants(joinGameId);
-
-    const updateParticipantsRes = {
+    const joinGameRes = {
       type: "SUCCESS",
       message: `${nickname}님이 입장했습니다.`,
       data: {
         userId: userId || null,
-        gameId: userInfo.gameId,
+        gameId: joinGameId,
         gameName: name || null,
         managerId: manager,
+        // players: newParticipants,
+      },
+    };
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: joinGameId,
+        gameName: name || null,
         players: newParticipants,
       },
     };
-
     await transaction.commit();
 
+    console.log("접속시 유저정보", socketUsersInfo[socket.id]);
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
-    io.to(joinGameId).emit("updateParticipants", updateParticipantsRes);
+    io.of("/game").to(joinGameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();
@@ -168,6 +166,8 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     // 방장이 퇴장할때, 다음 유저가 방장이 되도록 처리
     // 한명(방장)이 남았을때 퇴장하면 방 종료처리 (is_waiting => 0)
     const participants = getParticipants(gameId);
+
+    // 퇴장후 남아있는 다음 유저가 방장예정
     const nextUserId = participants[0]?.userId;
 
     if (manager === userId && isWaiting === true) {
@@ -189,8 +189,8 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     }
 
     await transaction.commit();
-
-    const payload = {
+    console.log("퇴장 후 useInfo는", socketUsersInfo[socket.id]);
+    const joinGameRes = {
       type: "SUCCESS",
       message: `${nickname}님이 퇴장했습니다.`,
       data: {
@@ -198,7 +198,7 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
         gameId: gameId,
         gameName: name || null,
         manager: manager,
-        participantInfos: participants,
+        players: participants,
       },
     };
 
@@ -218,7 +218,18 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     console.log("게임정보는 ", socketGamesInfo[gameId]);
     console.log("유저정보는 ", socketUsersInfo[socket.id]);
     // 퇴장이 발생한방 전체 알림(나 제외)
-    socket.to(gameId).emit("updateParticipants", payload);
+    const newParticipants = getParticipants(gameId);
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: gameId,
+        gameName: name || null,
+        players: newParticipants,
+      },
+    };
+    io.of("/game").to(gameId).emit("leaveGame", joinGameRes);
+    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();

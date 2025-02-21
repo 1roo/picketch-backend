@@ -1,23 +1,20 @@
-const { socketUsersInfo, socketGamesInfo } = require("./gameStore");
 const {
   getPlayerFromUsersInfo,
-  checkValidRoom,
   toggleReadyGamesInfo,
-  getGamesInfoByGameId,
-  formatReadyData,
-  getGameRoom,
   checkAllReady,
   setGameFromGamesInfo,
   getGameInfoByGameId,
   getParticipants,
   isUserInGame,
   updateWaitingStatus,
+  getRandomKeywords,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   const gameInfo = getGameInfoByGameId(gameId);
   const {
+    name,
     currentTurnId,
     currentRound,
     maxRound,
@@ -40,16 +37,28 @@ exports.readyGameHandler = async (io, socket) => {
     // 레디 상태 토글
     toggleReadyGamesInfo(gameId, userId);
 
-    const participants = getParticipants(gameId);
+    const newParticipants = getParticipants(gameId);
     const readyStatusRes = {
       type: "SUCCESS",
-      message: `${nickname}님의 ready 상태가 변경되었습니다.`,
+      message: "게임 준비 성공",
       data: {
-        players: participants,
+        userId: userId || null,
+        gameId: gameId || null,
+        gameName: name || null,
+        managerId: manager || null,
       },
     };
-
-    io.to(gameId).emit("readyGame", readyStatusRes);
+    const updateParticipantsRes = {
+      type: "SUCCESS",
+      message: `유저 정보`,
+      data: {
+        gameId: gameId,
+        gameName: name || null,
+        players: newParticipants,
+      },
+    };
+    io.of("/game").to(gameId).emit("readyGame", readyStatusRes);
+    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     const readyStatusRes = {
@@ -67,17 +76,19 @@ exports.readyGameHandler = async (io, socket) => {
 exports.startGameHandler = async (io, socket) => {
   const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   const gameInfo = getGameInfoByGameId(gameId);
+  console.log("start시 게임정보", gameInfo);
   const {
     name,
-    currentTurnId,
+    currentTurnUserId,
     currentRound,
-    maxRound: round,
+    maxRound,
     isLock,
     pw,
     manager,
     isWaiting,
     players,
   } = gameInfo;
+
   try {
     // 참가 가능 방 여부 확인
     if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
@@ -101,27 +112,43 @@ exports.startGameHandler = async (io, socket) => {
     if (!updateResult[0]) throw new Error("isWaiting 상태를 변경할 수 없습니다.");
 
     // 스타트를 누르면 게임을 하기위한 세팅값 설정
-    const currentTurnUserId = players[0].userId;
-    const maxRound = players.length * round;
-    const currentRound = 1;
+    const newCurrentTurnUserId = players[0].userId;
+    const newMaxRound = players.length * maxRound;
+    const newCurrentRound = 1;
 
-    console.log("게임 시작 세팅값변경전", gameInfo);
+    // 랜덤 키워드 가져오기
+    const newKeywords = await getRandomKeywords(maxRound);
     const changedSettingGameInfo = setGameFromGamesInfo({
       gameId,
-      currentTurnUserId,
-      maxRound,
-      currentRound,
+      newCurrentTurnUserId,
+      newMaxRound,
+      newCurrentRound,
+      newKeywords,
     });
-    const startStatusRes = {
-      type: "SUCCESS",
-      message: `게임 시작 성공`,
-      data: {
-        gameId: gameId,
-        ...changedSettingGameInfo,
-      },
-    };
-    console.log("게임 시작 세팅값변경후", startStatusRes);
-    io.to(gameId).emit("startGame", startStatusRes);
+
+    // 순차적으로 키워드가져옴
+    const keyword = newKeywords[changedSettingGameInfo.currentRound - 1];
+
+    // 턴순서인 유저에게만 키워드 보내주기
+    const clients = io.of("/game").adapter.rooms.get(gameId);
+    if (clients) {
+      clients.forEach((socketId) => {
+        const playerSocket = io.of("/game").sockets.get(socketId);
+        if (!playerSocket) return;
+        const isTurn =
+          getPlayerFromUsersInfo(playerSocket.id).userId === newCurrentTurnUserId;
+        playerSocket.emit("startGame", {
+          type: "SUCCESS",
+          message: "게임이 시작되었습니다.",
+          data: {
+            currentTurnUserId: changedSettingGameInfo.currentTurnUserId,
+            maxRound: changedSettingGameInfo.maxRound,
+            currentRound: changedSettingGameInfo.currentRound,
+            ...(isTurn && { keyword: keyword }), // 현재 턴 유저에게만 키워드 포함
+          },
+        });
+      });
+    }
   } catch (err) {
     console.log(err);
     const startStatusRes = {

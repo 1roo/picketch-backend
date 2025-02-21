@@ -1,4 +1,4 @@
-const db = require("../models");
+const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db
@@ -124,8 +124,15 @@ exports.formatParticipantData = (playerInstances) => {
 
 // 유저 정보 조회 (socketUserInfo)
 exports.getPlayerFromUsersInfo = (socketId) => {
-  const { userId, nickname, gameId } = socketUsersInfo[socketId];
-  return { userId, nickname, gameId };
+  const playerInfo = socketUsersInfo[socketId];
+  console.log("안에서", socketUsersInfo[socketId]);
+  if (!playerInfo) throw new Error("사용자를 찾을 수 없습니다.");
+  console.log(playerInfo);
+  return {
+    userId: playerInfo.userId,
+    nickname: playerInfo.nickname,
+    gameId: playerInfo.gameId,
+  };
 };
 
 // 유저 정보 추가 (socketUserInfo)
@@ -148,6 +155,9 @@ exports.addPlayerToUsersInfo = (
   }
   if (character !== undefined) {
     socketUsersInfo[socketId].character = character;
+  }
+  if (joinGameId !== undefined) {
+    socketUsersInfo[socketId].gameId = joinGameId;
   }
   if (gameId !== undefined) {
     socketUsersInfo[socketId].gameId = gameId;
@@ -183,6 +193,7 @@ exports.getGameInfoByGameId = (gameId) => {
 //     players: [],
 //   };
 // }
+
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
 exports.addPlayerToGamesInfo = (socketId, gameId) => {
   if (!socketGamesInfo[gameId]) {
@@ -192,6 +203,7 @@ exports.addPlayerToGamesInfo = (socketId, gameId) => {
         currentRound: 1,
         maxRound: null,
         isLock: false,
+        keyword: "사과",
         pw: "1234",
         manager: 1,
         isWaiting: true,
@@ -220,6 +232,32 @@ exports.addPlayerToGamesInfo = (socketId, gameId) => {
   console.log("게임방 참가후(메모리) 게임정보는 ", socketGamesInfo[gameId]);
 };
 
+// 게임 정보의 해당 유저의 점수 업데이트 (socketGamesInfo)
+exports.updateScoreToGameInfo = ({ userId, gameId, score }) => {
+  const gameInfo = socketGamesInfo[gameId];
+  console.log("점수업데이트하기 직전 게임정보");
+  if (!gameInfo || !gameInfo.players) {
+    console.log("게임 정보가 없거나, 유저들 정보가 없습니다.");
+    return;
+  }
+  const isPlayerExist = gameInfo.players.some((player) => player.userId === userId);
+  if (!isPlayerExist) {
+    console.log("점수를 추가하려고 하는 유저가 게임에 존재하지 않습니다.");
+    return;
+  }
+  const newPlayers = gameInfo.players.map((player) => {
+    if (player.userId === userId) {
+      return { ...player, score: (player.score += score) };
+    }
+    return player;
+  });
+  socketGamesInfo[gameId] = {
+    ...socketGamesInfo[gameId],
+    players: newPlayers,
+  };
+  console.log("점수 업데이트 후 게임 정보 ", gameInfo);
+};
+
 // 게임 정보에서 현재 참가자 조회 (socketGamesInfo)
 exports.getParticipants = (gameId) => {
   const gameInfo = exports.getGameInfoByGameId(gameId);
@@ -242,11 +280,13 @@ exports.getParticipants = (gameId) => {
 //   name: '1번째방',
 //   currentTurnUserId: 0,
 //   currentRound: 1,
+//   isAnswerFound : false,
 //   maxRound: 5,
 //   isLock: true,
 //   pw: '1234',
 //   manager: 1,
 //   isWaiting: true,
+//   keyword : "사과"
 //   players: [ { userId: 4, nickname: '소고기', score: 0, ready: false } ]
 // }
 // 게임 정보에서 유저가 해당방에 참가중인지 확인 (socketGamesInfo)
@@ -285,6 +325,8 @@ exports.deletePlayerFromGamesInfo = (gameId, userId) => {
       ...socketGamesInfo[gameId],
       players: changedPlayer,
     };
+    //02021 테스트
+    // socketGamesInfo[gameId].players = changedPlayer;
   }
 };
 // socketGamesInfo[gameID]에서 ready 정보만 보이도록 formatting
@@ -306,9 +348,7 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
   const gameInfo = socketGamesInfo[gameId];
   if (gameInfo) {
     const changedPlayerInfo = gameInfo.players.map((player) => {
-      console.log("플레이어정보는", player);
       if (player.userId === userId) {
-        console.log("일치하는 플레이어");
         return { ...player, ready: !player.ready };
       }
       return player;
@@ -319,19 +359,24 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
 };
 
 // 게임 시작시 게임방 설정값 세팅 변경
+// spread 대신 직접 값 변경하기 추후에 변경 ######################################
 exports.setGameFromGamesInfo = ({
   gameId,
-  currentTurnUserId,
-  currentRound,
-  maxRound,
+  newCurrentTurnUserId,
+  newMaxRound,
+  newCurrentRound,
+  newKeywords,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
   if (gameInfo) {
     socketGamesInfo[gameId] = {
       ...gameInfo,
-      ...(currentRound !== undefined && { currentRound: currentRound }),
-      ...(currentTurnUserId !== undefined && { currentTurnUserId: currentTurnUserId }),
-      ...(maxRound !== undefined && { maxRound: maxRound }),
+      ...(newCurrentRound !== undefined && { currentRound: newCurrentRound }),
+      ...(newCurrentTurnUserId !== undefined && {
+        currentTurnUserId: newCurrentTurnUserId,
+      }),
+      ...(newMaxRound !== undefined && { maxRound: newMaxRound }),
+      ...(newKeywords !== undefined && { keywords: newKeywords }),
       isWaiting: false,
     };
 
@@ -396,6 +441,7 @@ exports.syncGameInfoFromDB = async () => {
   // 게임 방 추가하기 (socketGamesInfo)
   gameFindResult.forEach((game) => {
     const { game_id, name, manager, is_lock, pw, round, is_waiting } = game;
+
     socketGamesInfo[game_id] = {
       name,
       currentTurnUserId: 0,
@@ -405,6 +451,8 @@ exports.syncGameInfoFromDB = async () => {
       pw,
       manager,
       isWaiting: is_waiting,
+      keywords: null,
+      // 참여했던 유저들 그대로 포함시킬지?
       players: [],
     };
   });
@@ -425,4 +473,22 @@ exports.expireGameFromDB = async () => {
   );
   socketGamesInfo;
   console.log("방 만료처리 결과는 ", gameFindResult);
+};
+
+// 랜덤 키워드 가져오기
+exports.getRandomKeywords = async (count) => {
+  const keywordsResult = await db.Keyword.findAll({
+    order: db.sequelize.random(),
+    limit: count,
+  });
+  return keywordsResult.map((keyword) => {
+    return keyword.keyword;
+  });
+};
+
+// 현재 라운드 종료 처리 (게임x)
+exports.finishCurrentRound = (gameId) => {
+  const gameInfo = socketGamesInfo[gameId];
+  const newGameInfo = { ...gameInfo, isAnswerFound: true };
+  socketGamesInfo[gameId] = newGameInfo;
 };
