@@ -6,27 +6,28 @@ const {
   updateScoreToGameInfo,
   finishCurrentRound,
   getParticipants,
+  getErrorRes,
 } = require("./gameUtils");
 
 exports.gameChatHandler = async (io, socket, payload) => {
   // 게임 채팅 보내기
   const { message } = payload;
-  const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
-  console.log("채팅보내는사람은", userId, nickname, gameId);
-  const game = getGameInfoByGameId(gameId);
-  const {
-    name,
-    currentTurnUserId,
-    currentRound,
-    isAnswerFound,
-    maxRound,
-    isLock,
-    pw,
-    manager,
-    isWaiting,
-    players,
-  } = game;
   try {
+    const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
+    console.log("채팅보내는사람은", userId, nickname, gameId);
+    const game = getGameInfoByGameId(gameId);
+    const {
+      name,
+      currentTurnUserId,
+      currentRound,
+      isAnswerFound,
+      maxRound,
+      isLock,
+      pw,
+      manager,
+      isWaiting,
+      players,
+    } = game;
     // message 유효성 검사
     if (!message) {
       throw new Error("메세지가 존재 하지 않습니다.");
@@ -46,11 +47,6 @@ exports.gameChatHandler = async (io, socket, payload) => {
       gameMessage: message,
     };
 
-    console.log("채팅보낼때 게임 정보", socketGamesInfo["1"]);
-    console.log("isWaiting은", isWaiting);
-    console.log("isWaiting은", typeof isWaiting);
-    console.log("currentTurnId는", currentTurnUserId);
-    console.log("userId", userId);
     // 전체에게 메세지만 전달
     io.of("/game").to(gameId).emit("gameMessage", sendMsgRes);
 
@@ -88,17 +84,7 @@ exports.gameChatHandler = async (io, socket, payload) => {
     }
   } catch (err) {
     console.log(err);
-
-    const sendMsgRes = {
-      type: "FAIL",
-      message: err.message,
-      data: {
-        senderId: userId,
-        senderNick: nickname,
-        gameMessage: message || null,
-      },
-    };
-
-    socket.emit("gameMessage", sendMsgRes);
+    const gameMessageErrRes = getErrorRes(socket.id, err.message);
+    socket.emit("gameMessage", gameMessageErrRes);
   }
 };

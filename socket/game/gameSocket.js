@@ -6,7 +6,7 @@ const { syncUserInfoFromDB } = require("./gameUtils");
 
 exports.gameSocket = async (io, socket) => {
   // 소켓연결하는 유저 저장 (socketUserInfo)
-  await syncUserInfoFromDB(socket, socket.userId);
+  await syncUserInfoFromDB(socket.id, socket.userId);
 
   // 게임방 입장
   socket.on("joinGame", async (payload) => {
@@ -33,8 +33,8 @@ exports.gameSocket = async (io, socket) => {
     await drawCanvasHandler(io, socket, payload);
   });
   // 게임방 그림 초기화
-  socket.on("clearCanvas", async () => {
-    await clearCanvasHandler(io, socket);
+  socket.on("clearCanvas", async (cb) => {
+    await clearCanvasHandler(io, socket, cb);
   });
   // 연결 종료
   socket.on("disconnect", async () => {
