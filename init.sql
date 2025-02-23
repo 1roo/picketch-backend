@@ -58,3 +58,4 @@ VALUES
 (6,10,'FRIEND_REQUEST','PENDING','채송화님이 친구 요청을 보냈습니다.',NOW(),NOW());
 (7,10,'FRIEND_REQUEST','PENDING','나미리님이 친구 요청을 보냈습니다.',NOW(),NOW()),
 (8,10,'FRIEND_REQUEST','PENDING','엄마님이 친구 요청을 보냈습니다.',NOW(),NOW());
+
