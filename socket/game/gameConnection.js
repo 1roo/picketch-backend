@@ -7,21 +7,17 @@ const {
   getPlayerFromUsersInfo,
   deletePlayerUsersInfo,
   deletePlayerFromGamesInfo,
-  getGameRoom,
   changeManagerOnLeave,
   getGameInfoByGameId,
   getParticipants,
-  addPlayerToUsersInfo,
   changeManagerInGame,
   getUpdatePlayersRes,
   getJoinRes,
   getErrorRes,
   getLeaveRes,
-  setPlayerToUsersInfo,
   getRestParticipants,
   joinGameToUsersInfo,
   leaveGameFromUsersInfo,
-  deleteGameFromGamesInfo,
   getUpdateGameInfoRes,
 } = require("./gameUtils");
 
@@ -133,11 +129,11 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     await transaction.commit();
 
     // joinGame 성공 응답객체
-    const leaveGameRes = getLeaveRes(socket.id, "퇴장 성공");
+    const leaveGameRes = getLeaveRes(socket.id, "게임방 퇴장");
     // 퇴장 처리 socketGamesInfo
     deletePlayerFromGamesInfo(socket.id);
     // updateParticipants 성공 응답객체
-    const updateParticipantsRes = getUpdatePlayersRes(socket.id);
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
 
     // 퇴장 처리 socketUserInfo
     leaveGameFromUsersInfo(socket.id);
@@ -155,7 +151,7 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     // 퇴장이 발생한방 전체 알림
     // io.of("/game").to(gameId).emit("leaveGame", leaveGameRes);
     socket.emit("leaveGame", leaveGameRes);
-    io.of("/game").to(userInfo.gameId).emit("updateParticipants", updateParticipantsRes);
+    io.of("/game").to(userInfo.gameId).emit("updateParticipants", updateGameInfoRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();

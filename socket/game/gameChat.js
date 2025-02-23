@@ -5,10 +5,9 @@ const {
   getGameInfoByGameId,
   updateScoreToGameInfo,
   finishCurrentRound,
-  getParticipants,
   getErrorRes,
   getUpdateGameInfoRes,
-  getRoundEndRes,
+  getEndRoundRes,
 } = require("./gameUtils");
 
 exports.gameChatHandler = (io, socket, payload) => {
@@ -71,9 +70,9 @@ exports.gameChatHandler = (io, socket, payload) => {
         console.log("정답시 정답자가 누군지 전체 메세지 보내기");
 
         const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
-        const roundEndRes = getRoundEndRes(socket.id);
+        const endRoundRes = getEndRoundRes(socket.id);
 
-        io.of("/game").to(gameId).emit("roundEnd", roundEndRes);
+        io.of("/game").to(gameId).emit("endRound", endRoundRes);
         io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
       }
     }

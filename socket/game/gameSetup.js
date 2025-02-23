@@ -5,17 +5,14 @@ const {
   checkAllReady,
   setGameFromGamesInfo,
   getGameInfoByGameId,
-  getParticipants,
   isUserInGame,
   updateWaitingStatus,
   getRandomKeywords,
   getErrorRes,
-  getUpdatePlayersRes,
   getReadyRes,
-  getStartRes,
-  emitStartGameWithTurn,
   getUpdateGameInfoRes,
   emitRoundStartWithTurn,
+  getEndGameRes,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -104,8 +101,9 @@ exports.startGameHandler = async (io, socket) => {
     const newCurrentRound = 1;
     const newIsWaiting = false;
     const newIsAnswerFound = false;
-    const newKeywords = await getRandomKeywords(maxRound);
+    const newKeywords = await getRandomKeywords(newMaxRound);
     const newCurrentRoundKeyword = newKeywords[newCurrentRound - 1];
+    const newIsNextRoundSettled = true;
 
     setGameFromGamesInfo({
       gameId,
@@ -116,10 +114,10 @@ exports.startGameHandler = async (io, socket) => {
       newCurrentRoundKeyword,
       newIsWaiting,
       newIsAnswerFound,
+      newIsNextRoundSettled,
     });
 
     console.log("게임시작시 게임정보", socketGamesInfo[gameId]);
-    // io.of("/game").to(gameId).emit("startGame", startGameRes);
     emitRoundStartWithTurn(io, socket.id, "startGame");
   } catch (err) {
     console.log(err);
@@ -129,17 +127,15 @@ exports.startGameHandler = async (io, socket) => {
 };
 
 // 중복으로 클라이언트에게 응답보내는것을 방지
-let isNextTurnProgressing = false;
 exports.nextTurnHandler = (io, socket) => {
   try {
-    if (isNextTurnProgressing) {
-      throw new Error("다른 클라이언트의 요청을 처리중입니다.");
-    }
-
-    isNextTurnProgressing = true;
-
     const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(userInfo.gameId);
+
+    // 라운드 세팅이 완료된 이후 들어오는 요청 무시
+    if (gameInfo.isNextRoundSettled) {
+      return;
+    }
 
     // 참가 가능 방 여부 확인
     if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
@@ -150,8 +146,14 @@ exports.nextTurnHandler = (io, socket) => {
     // 현재 라운드가 종료되었는지 확인
     if (!gameInfo.isAnswerFound) throw new Error("현재 라운드가 종료되지 않았습니다.");
     // 마지막 라운드를 넘었는지 확인
-    if (gameInfo.currentRound >= gameInfo.maxRound)
-      throw new Error("현재 마지막 라운드입니다.");
+    if (gameInfo.currentRound >= gameInfo.maxRound) {
+      console.log("마지막 라운드가 끝나서 게임 종료 처리");
+      const endGameRes = getEndGameRes(socket.id, "게임 종료");
+      const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+      io.of("/game").to(userInfo.gameId).emit("endGame", endGameRes);
+      io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
+      return;
+    }
 
     // 다음 라운드 게임을 하기위한 세팅값 설정
     const gameId = userInfo.gameId;
@@ -163,6 +165,7 @@ exports.nextTurnHandler = (io, socket) => {
     const nextCurrentRound = gameInfo.currentRound + 1;
     const nextIsAnswerFound = false;
     const nextCurrentRoundKeyword = gameInfo.keywords[nextCurrentRound - 1];
+    const nextIsNextRoundSettled = true;
 
     setGameFromGamesInfo({
       gameId,
@@ -170,10 +173,13 @@ exports.nextTurnHandler = (io, socket) => {
       newCurrentRound: nextCurrentRound,
       newCurrentRoundKeyword: nextCurrentRoundKeyword,
       newIsAnswerFound: nextIsAnswerFound,
+      newIsNextRoundSettled: nextIsNextRoundSettled,
     });
 
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
     console.log("다음 턴 시작시 게임정보", socketGamesInfo[gameId]);
     emitRoundStartWithTurn(io, socket.id, "nextTurn");
+    io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
   } catch (err) {
     console.log(err);
     const nextTurnErrRes = getErrorRes(socket.id, err.message);
