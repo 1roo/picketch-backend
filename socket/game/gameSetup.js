@@ -8,6 +8,11 @@ const {
   isUserInGame,
   updateWaitingStatus,
   getRandomKeywords,
+  getErrorRes,
+  getUpdatePlayersRes,
+  getReadyRes,
+  getStartRes,
+  emitStartGameWithTurn,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -27,7 +32,7 @@ exports.readyGameHandler = async (io, socket) => {
   try {
     // 참가 가능 방 여부 확인
     if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
-    if (!gameInfo.isWaiting) throw new Error("시작된 방입니다.");
+    if (!isWaiting) throw new Error("시작된 방입니다.");
     // 내가 참가중인 방인지 확인
     const isEntering = isUserInGame(gameId, userId);
     if (!isEntering) throw new Error("참가 중인 방이 아닙니다.");
@@ -37,39 +42,17 @@ exports.readyGameHandler = async (io, socket) => {
     // 레디 상태 토글
     toggleReadyGamesInfo(gameId, userId);
 
-    const newParticipants = getParticipants(gameId);
-    const readyStatusRes = {
-      type: "SUCCESS",
-      message: "게임 준비 성공",
-      data: {
-        userId: userId || null,
-        gameId: gameId || null,
-        gameName: name || null,
-        managerId: manager || null,
-      },
-    };
-    const updateParticipantsRes = {
-      type: "SUCCESS",
-      message: `유저 정보`,
-      data: {
-        gameId: gameId,
-        gameName: name || null,
-        players: newParticipants,
-      },
-    };
-    io.of("/game").to(gameId).emit("readyGame", readyStatusRes);
+    // readyGame 성공 응답객체
+    const readyGameRes = getReadyRes(socket.id, "준비 성공");
+    // updateParticipants 성공 응답객체
+    const updateParticipantsRes = getUpdatePlayersRes(socket.id);
+
+    io.of("/game").to(gameId).emit("readyGame", readyGameRes);
     io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
-    const readyStatusRes = {
-      type: "ERROR",
-      message: err.message,
-      data: {
-        userId: userId,
-        gameId: gameId,
-      },
-    };
-    socket.emit("readyGame", readyStatusRes);
+    const readyErrRes = getErrorRes(socket.id, err.message);
+    socket.emit("readyGame", readyErrRes);
   }
 };
 
@@ -115,50 +98,24 @@ exports.startGameHandler = async (io, socket) => {
     const newCurrentTurnUserId = players[0].userId;
     const newMaxRound = players.length * maxRound;
     const newCurrentRound = 1;
-
-    // 랜덤 키워드 가져오기
+    const newIsWaiting = false;
+    const newIsAnswerFound = false;
     const newKeywords = await getRandomKeywords(maxRound);
-    const changedSettingGameInfo = setGameFromGamesInfo({
+    setGameFromGamesInfo({
       gameId,
       newCurrentTurnUserId,
       newMaxRound,
       newCurrentRound,
       newKeywords,
+      newIsWaiting,
+      newIsAnswerFound,
     });
 
-    // 순차적으로 키워드가져옴
-    const keyword = newKeywords[changedSettingGameInfo.currentRound - 1];
-
-    // 턴순서인 유저에게만 키워드 보내주기
-    const clients = io.of("/game").adapter.rooms.get(gameId);
-    if (clients) {
-      clients.forEach((socketId) => {
-        const playerSocket = io.of("/game").sockets.get(socketId);
-        if (!playerSocket) return;
-        const isTurn =
-          getPlayerFromUsersInfo(playerSocket.id).userId === newCurrentTurnUserId;
-        playerSocket.emit("startGame", {
-          type: "SUCCESS",
-          message: "게임이 시작되었습니다.",
-          data: {
-            currentTurnUserId: changedSettingGameInfo.currentTurnUserId,
-            maxRound: changedSettingGameInfo.maxRound,
-            currentRound: changedSettingGameInfo.currentRound,
-            ...(isTurn && { keyword: keyword }), // 현재 턴 유저에게만 키워드 포함
-          },
-        });
-      });
-    }
+    // emitStartGameWithTurn(io, gameId);
+    emitStartGameWithTurn(io, socket.id);
   } catch (err) {
     console.log(err);
-    const startStatusRes = {
-      type: "ERROR",
-      message: err.message,
-      data: {
-        userId: userId,
-        gameId: gameId,
-      },
-    };
-    socket.emit("startGame", startStatusRes);
+    const startErrRes = getErrorRes(socket.id, err.message);
+    socket.emit("readyGame", startErrRes);
   }
 };

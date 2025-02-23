@@ -13,50 +13,42 @@ const {
   getParticipants,
   addPlayerToUsersInfo,
   changeManagerInGame,
+  getUpdatePlayersRes,
+  getJoinRes,
+  getErrorRes,
+  getLeaveRes,
+  setPlayerToUsersInfo,
+  getRestParticipants,
+  joinGameToUsersInfo,
+  leaveGameFromUsersInfo,
+  deleteGameFromGamesInfo,
 } = require("./gameUtils");
 
 // 게임 참가 처리 로직
 exports.joinGameRoomHandler = async (io, socket, payload) => {
-  const { gameId: joinGameId, inputPw } = payload;
-  const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
-
-  console.log("소켓아이디", socket.id, typeof socket.id);
-  console.log("소켓아이디", typeof socket.id);
+  const { gameId, inputPw } = payload;
 
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
     // 요청값 유효성 검증
-    if (!joinGameId || typeof joinGameId !== "number")
+    if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
     if (typeof inputPw !== "string") throw new Error("유효한 pw 정보가 없습니다.");
 
     // 참가 가능 방 여부 확인
-    const game = getGameInfoByGameId(joinGameId);
-    if (!game) throw new Error("존재하지 않는 방입니다.");
-    if (!game.isWaiting) throw new Error("대기중인 방이 아닙니다.");
-
-    const {
-      name,
-      currentTurnId,
-      currentRound,
-      maxRound,
-      isLock,
-      pw,
-      manager,
-      isWaiting,
-      players,
-    } = game;
+    const gameInfo = getGameInfoByGameId(gameId);
+    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
+    if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
     // 비밀번호 유효성 검증
-    if (isLock && inputPw !== pw) {
+    if (gameInfo.isLock && inputPw !== gameInfo.pw) {
       throw new Error("비밀번호가 일치하지 않습니다.");
     }
 
     // 참자가 조회
-    const beforeParticipants = getParticipants(joinGameId);
+    const beforeParticipants = getParticipants(gameId);
     const userCount = beforeParticipants.length;
-    console.log("참가 유저수는 ", userCount);
 
     // 입장 정원 체크
     if (userCount >= 8) {
@@ -64,43 +56,24 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     }
 
     // 입장 처리 db
-    await addUserToGameRoom(joinGameId, userId, transaction);
-    // 입장 처리 socketGamesInfo
-    addPlayerToGamesInfo(socket.id, joinGameId);
-    // 입장 처리 socketUserInfo
     const userInfo = getPlayerFromUsersInfo(socket.id);
-    addPlayerToUsersInfo(userInfo, socket.id, joinGameId);
-    // 입장 처리 socket room
-    socket.join(joinGameId);
-
-    // 참가자 정보 조회
-    const newParticipants = getParticipants(joinGameId);
-    const joinGameRes = {
-      type: "SUCCESS",
-      message: `${nickname}님이 입장했습니다.`,
-      data: {
-        userId: userId || null,
-        gameId: joinGameId,
-        gameName: name || null,
-        managerId: manager,
-        // players: newParticipants,
-      },
-    };
-    const updateParticipantsRes = {
-      type: "SUCCESS",
-      message: `유저 정보`,
-      data: {
-        gameId: joinGameId,
-        gameName: name || null,
-        players: newParticipants,
-      },
-    };
+    await addUserToGameRoom(gameId, userInfo.userId, transaction);
     await transaction.commit();
+    // 입장 처리 socketGamesInfo
+    addPlayerToGamesInfo(socket.id, gameId);
+    // 입장 처리 socketUserInfo
+    joinGameToUsersInfo(socket.id, gameId);
+    // 입장 처리 socket room
+    socket.join(gameId);
 
-    console.log("접속시 유저정보", socketUsersInfo[socket.id]);
+    // joinGame 성공 응답객체
+    const joinGameRes = getJoinRes(socket.id, "입장 성공");
+    // updateParticipants 성공 응답객체
+    const updateParticipantsRes = getUpdatePlayersRes(socket.id);
+
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
-    io.of("/game").to(joinGameId).emit("updateParticipants", updateParticipantsRes);
+    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();
@@ -113,135 +86,82 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
       message = err.message;
     }
 
-    const payload = {
-      type: "ERROR",
-      message: message,
-      data: {
-        userId: userId,
-        gameId: gameId,
-      },
-    };
-    socket.emit("joinGame", payload);
+    const joinGameErrRes = getErrorRes(socket.id, message);
+    socket.emit("joinGame", joinGameErrRes);
   }
 };
 
 // 게임 퇴장 처리 로직
 exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
   const transaction = await db.sequelize.transaction();
-  const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   try {
+    const userInfo = getPlayerFromUsersInfo(socket.id);
+    const gameInfo = getGameInfoByGameId(userInfo.gameId);
     // 참가중인 방인지 확인
-    if (!gameId) throw new Error("참가중인 방이 없습니다.");
-
+    if (!userInfo.gameId) throw new Error("참가중인 방이 없습니다.");
     // 퇴장 가능 방 여부 확인
-    const game = getGameInfoByGameId(gameId);
-    if (!game) throw new Error("존재하지 않는 방입니다.");
-    const {
-      name,
-      currentTurnId,
-      currentRound,
-      maxRound,
-      isLock,
-      pw,
-      isWaiting,
-      players,
-    } = game;
-    let { manager } = game;
+    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
 
     // 퇴장 처리 db
-    const destroyResult = await deleteEnterRoomFromDB(gameId, userId, transaction);
+    const destroyResult = await deleteEnterRoomFromDB(
+      userInfo.gameId,
+      userInfo.userId,
+      transaction,
+    );
     if (!destroyResult) throw new Error("퇴장 처리 실패");
 
-    // 퇴장 처리 socketGamesInfo
-    deletePlayerFromGamesInfo(gameId, userId);
+    // 대기방에서 퇴장하는 유저가 방장인 경우
+    const restParticipants = getRestParticipants(socket.id);
+    console.log("퇴장시 본인제외 나머지 참가자", restParticipants);
+    const nextUserId = restParticipants[0]?.userId;
+    if (gameInfo.manager === userInfo.userId && gameInfo.isWaiting === true) {
+      // 방장이 퇴장할때, 다음 유저가 방장이 되도록 처리
+      // 한명(방장)이 남았을때 퇴장하면 방 종료처리 (is_waiting => 0)
 
-    // 퇴장 처리 socketUserInfo
-    addPlayerToUsersInfo(
-      { userId: undefined, nickname: undefined, gameId: null },
-      socket.id,
-    );
-    // 퇴장 처리 socket room
-    socket.leave(gameId);
-
-    // 방장이 퇴장할때, 다음 유저가 방장이 되도록 처리
-    // 한명(방장)이 남았을때 퇴장하면 방 종료처리 (is_waiting => 0)
-    const participants = getParticipants(gameId);
-
-    // 퇴장후 남아있는 다음 유저가 방장예정
-    const nextUserId = participants[0]?.userId;
-
-    if (manager === userId && isWaiting === true) {
-      const { newManager, gameIsFinish } = await changeManagerOnLeave(
+      const { newManagerId } = await changeManagerOnLeave(
         nextUserId,
-        gameId,
+        userInfo.gameId,
         transaction,
       );
 
-      // 변경된 매니저 값 가져오기
-      const updatedGame = await getGameRoom(gameId, gameIsFinish, transaction);
-
-      // gameInfo의 해당 게임에서 manager 변경
-      manager = updatedGame.manager;
-      changeManagerInGame(gameId, updatedGame.manager);
-
-      // 다음 방장유저가 없으면 게임정보를 삭제(게임 생성 종료)
-      // if (!newManager) deleteGameFromGamesInfo(gameId);
+      // 남은 유저가 있는 경우 방장 변경 socketGamesInfo
+      if (nextUserId) {
+        changeManagerInGame(userInfo.gameId, newManagerId);
+      }
     }
-
     await transaction.commit();
-    console.log("퇴장 후 useInfo는", socketUsersInfo[socket.id]);
-    const joinGameRes = {
-      type: "SUCCESS",
-      message: `${nickname}님이 퇴장했습니다.`,
-      data: {
-        userId: userId || null,
-        gameId: gameId,
-        gameName: name || null,
-        manager: manager,
-        players: participants,
-      },
-    };
 
-    // 직접 퇴장 요청한 경우  퇴장 요청한 유저에게만 알림
-    if (isManualLeave) {
-      socket.emit("leaveGame", {
-        type: "SUCCESS",
-        message: "퇴장 처리되었습니다.",
-        data: { userId: userId, gameId: gameId, gameName: name },
-      });
+    // joinGame 성공 응답객체
+    const leaveGameRes = getLeaveRes(socket.id, "퇴장 성공");
+    // 퇴장 처리 socketGamesInfo
+    deletePlayerFromGamesInfo(socket.id);
+    // updateParticipants 성공 응답객체
+    const updateParticipantsRes = getUpdatePlayersRes(socket.id);
 
-      socket.leave(gameId);
-    } else {
-      socket.leave(gameId);
+    // 퇴장 처리 socketUserInfo
+    leaveGameFromUsersInfo(socket.id);
+    // 퇴장 처리 socket room
+    socket.leave(userInfo.gameId);
+
+    // 소켓 연결 종료시 유저 정보 삭제 (socketUserInfo)
+    if (!isManualLeave) {
       deletePlayerUsersInfo(socket.id);
     }
-    console.log("게임정보는 ", socketGamesInfo[gameId]);
-    console.log("유저정보는 ", socketUsersInfo[socket.id]);
-    // 퇴장이 발생한방 전체 알림(나 제외)
-    const newParticipants = getParticipants(gameId);
-    const updateParticipantsRes = {
-      type: "SUCCESS",
-      message: `유저 정보`,
-      data: {
-        gameId: gameId,
-        gameName: name || null,
-        players: newParticipants,
-      },
-    };
-    io.of("/game").to(gameId).emit("leaveGame", joinGameRes);
-    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
+    const userInfo1 = socketUsersInfo;
+    const gameInfo1 = socketGamesInfo;
+    console.log("퇴장후 유저", userInfo1);
+    console.log("퇴장후 게임", gameInfo1);
+    // 퇴장이 발생한방 전체 알림
+    // io.of("/game").to(gameId).emit("leaveGame", leaveGameRes);
+    socket.emit("leaveGame", leaveGameRes);
+    io.of("/game").to(userInfo.gameId).emit("updateParticipants", updateParticipantsRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();
+
     if (isManualLeave) {
-      socket.emit("leaveGame", {
-        type: "ERROR",
-        message: err.message,
-        data: {
-          userId: userId,
-          gameId: gameId,
-        },
-      });
+      const leaveGameErrRes = getErrorRes(socket.id, err.message);
+      socket.emit("leaveGame", leaveGameErrRes);
     }
   }
 };

@@ -120,49 +120,64 @@ exports.formatParticipantData = (playerInstances) => {
   });
 };
 
-//////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 유저 정보 조회 (socketUserInfo)
 exports.getPlayerFromUsersInfo = (socketId) => {
-  const playerInfo = socketUsersInfo[socketId];
-  console.log("안에서", socketUsersInfo[socketId]);
-  if (!playerInfo) throw new Error("사용자를 찾을 수 없습니다.");
-  console.log(playerInfo);
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = socketUsersInfo[socketId];
+  if (!userInfo) throw new Error("userInfo에서 해당 유저를 찾을 수 없습니다.");
   return {
-    userId: playerInfo.userId,
-    nickname: playerInfo.nickname,
-    gameId: playerInfo.gameId,
+    userId: userInfo.userId,
+    nickname: userInfo.nickname,
+    gameId: userInfo.gameId,
+    character: userInfo.character,
+    region: userInfo.region,
   };
 };
 
-// 유저 정보 추가 (socketUserInfo)
-exports.addPlayerToUsersInfo = (
-  { userId, nickname, region, character, gameId: joinGameId },
-  socketId,
-  gameId,
-) => {
+// 유저 정보 게임장 입장 (socketUserInfo)
+exports.joinGameToUsersInfo = (socketId, gameId) => {
+  socketUsersInfo[socketId] = {
+    ...socketUsersInfo[socketId],
+    gameId: gameId,
+  };
+  console.log("userInfo 변경 후는 ", socketUsersInfo);
+};
+
+// 유저 정보 게임방 퇴장 (socketUserInfo)
+exports.leaveGameFromUsersInfo = (socketId) => {
+  socketUsersInfo[socketId] = {
+    ...socketUsersInfo[socketId],
+    game: null,
+  };
+};
+
+// 유저 정보에 소켓 연결유저 메모리에 저장 (socketUserInfo)
+exports.setPlayerToUsersInfo = (socketId, userInfo) => {
+  if (!socketId) throw new Error("연결된 소켓 id 값이 없습니다.");
   if (!socketUsersInfo[socketId]) {
     socketUsersInfo[socketId] = {};
   }
-  if (userId !== undefined) {
-    socketUsersInfo[socketId].userId = userId;
+  if (userInfo.userId !== undefined) {
+    socketUsersInfo[socketId].userId = userInfo.userId;
   }
-  if (nickname !== undefined) {
-    socketUsersInfo[socketId].nickname = nickname;
+  if (userInfo.nickname !== undefined) {
+    socketUsersInfo[socketId].nickname = userInfo.nickname;
   }
-  if (region !== undefined) {
-    socketUsersInfo[socketId].region = region;
+  if (userInfo.region !== undefined) {
+    socketUsersInfo[socketId].region = userInfo.region;
   }
-  if (character !== undefined) {
-    socketUsersInfo[socketId].character = character;
+  if (userInfo.character !== undefined) {
+    socketUsersInfo[socketId].character = userInfo.character;
   }
-  if (joinGameId !== undefined) {
-    socketUsersInfo[socketId].gameId = joinGameId;
+  if (userInfo.gameId !== undefined) {
+    socketUsersInfo[socketId].gameId = userInfo.gameId;
   }
-  if (gameId !== undefined) {
-    socketUsersInfo[socketId].gameId = gameId;
-  }
-  console.log("userInfo 변경 후는 ", socketUsersInfo);
+  console.log("연결 소켓유저 userInfo에 저장후 ", socketUsersInfo);
 };
 
 // 유저 정보 삭제 (socketUserInfo)
@@ -170,61 +185,45 @@ exports.deletePlayerUsersInfo = (socketId) => {
   delete socketUsersInfo[socketId];
 };
 
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 게임 정보 조회 (socketGamesInfo)
 exports.getGameInfoByGameId = (gameId) => {
+  if (!gameId) throw new Error("조회하려는 gameId 값이 없습니다.");
   const gameInfo = socketGamesInfo[gameId];
+  if (!gameInfo) throw new Error("gameInfo에서 해당 게임을 찾을 수 없습니다.");
   console.log("gameInfo 조회값은 ", gameInfo);
   return gameInfo;
 };
 
-// // 게임 방 추가하기 (socketGamesInfo)
-// exports.addGameToGameInfo = async(gameId)=>{
-//   const gameInfo = {
-//     name: "1번째방",
-//     currentTurn: 0,
-//     currentRound: 1,
-//     maxRound: 4,
-//     isLock: true,
-//     pw: "1234",
-//     manager: 1,
-//     isWaiting: true,
-//     players: [],
-//   };
-// }
-
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
 exports.addPlayerToGamesInfo = (socketId, gameId) => {
+  // 방만들때 메모리에 올라가지 않아서 임시로 객체를 만들어주기@!#!@#!@#!@#!@#!
   if (!socketGamesInfo[gameId]) {
     socketGamesInfo[gameId] = {
-      gameStatus: {
-        currentTurnId: 1,
-        currentRound: 1,
-        maxRound: null,
-        isLock: false,
-        keyword: "사과",
-        pw: "1234",
-        manager: 1,
-        isWaiting: true,
-      },
+      currentTurnUserId: 1,
+      currentRound: 1,
+      isAnswerFound: false,
+      maxRound: null,
+      isLock: false,
+      pw: "1234",
+      manager: 1,
+      isWaiting: true,
+      keyword: "사과",
       players: [],
     };
   }
-  const { userId } = exports.getPlayerFromUsersInfo(socketId);
-  const isExist = socketGamesInfo[gameId].players.some(
-    (player) => player.userId === userId,
-  );
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(gameId);
+  const isExist = gameInfo.players.some((player) => player.userId === userInfo.userId);
   if (!isExist) {
-    const { manager } = socketGamesInfo[gameId];
-    const { userId, character, region, nickname } = socketUsersInfo[socketId];
     socketGamesInfo[gameId].players.push({
-      userId: userId,
-      nickname: nickname,
+      userId: userInfo.userId,
+      nickname: userInfo.nickname,
       score: 0,
-      ready: manager === userId ? true : false,
-      character: character,
-      region: region,
+      ready: gameInfo.manager === userInfo.userId ? true : false,
+      character: userInfo.character,
+      region: userInfo.region,
     });
   } else {
     throw new Error("이미 해당 방에 입장되어 있습니다.");
@@ -258,40 +257,23 @@ exports.updateScoreToGameInfo = ({ userId, gameId, score }) => {
   console.log("점수 업데이트 후 게임 정보 ", gameInfo);
 };
 
-// 게임 정보에서 현재 참가자 조회 (socketGamesInfo)
+// 참가중인 게임 정보에서 현재 참가자 조회 (socketGamesInfo)
 exports.getParticipants = (gameId) => {
   const gameInfo = exports.getGameInfoByGameId(gameId);
   const participants = gameInfo.players.map((player) => player);
   console.log("현재 참가자 조회결과는 ", participants);
   return participants;
 };
-// 유저 소켓연결후는  {
-//   WSakYa4D6vKBREXSAAAB: {
-//     userId: 4,
-//     nickname: '소고기',
-//     region: '강북구',
-//     character: '디폴트',
-//     gameId: 1
-//   },
-//   WtP94L5WM2YCm7sHAAAD: { userId: 1, nickname: '닭고기', region: '강동구', character: '디폴트' }
-// }
 
-// gameInfo 조회값은  {
-//   name: '1번째방',
-//   currentTurnUserId: 0,
-//   currentRound: 1,
-//   isAnswerFound : false,
-//   maxRound: 5,
-//   isLock: true,
-//   pw: '1234',
-//   manager: 1,
-//   isWaiting: true,
-//   keyword : "사과"
-//   players: [ { userId: 4, nickname: '소고기', score: 0, ready: false } ]
-// }
-// 게임 정보에서 유저가 해당방에 참가중인지 확인 (socketGamesInfo)
+// 참가중인 게임 정보에서 본인 제외 나머지 참가자 조회 (socketGamesInfo)
+exports.getRestParticipants = (socketId) => {
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  return gameInfo.players.filter((player) => player.userId !== userInfo.userId);
+};
+
+// 참가중인 게임 정보에서 유저가 해당방에 참가중인지 확인 (socketGamesInfo)
 exports.isUserInGame = (gameId, userId) => {
-  console.log("isUserInGame안에서 ", gameId, userId);
   const gameInfo = exports.getGameInfoByGameId(gameId);
   return gameInfo.players.some((player) => player.userId === userId);
 };
@@ -303,9 +285,23 @@ exports.checkAllReady = (gameId) => {
 };
 
 // 게임 정보에서 manager 유저 변경 (socketGamesInfo)
-exports.changeManagerInGame = (gameId, managerId) => {
-  const gameInfo = exports.getGameInfoByGameId(gameId);
-  gameInfo.manager = managerId;
+exports.changeManagerInGame = (gameId, newManagerId) => {
+  // 방장으로 바뀐 유저는 ready 값을 true로 변경
+  const changedPlayer = socketGamesInfo[gameId].players.map((player) => {
+    if (player.userId === newManagerId) {
+      return {
+        ...player,
+        ready: true,
+      };
+    }
+    return player;
+  });
+  console.log("방장 변경후 ready 상태 변경한 플레이어들", changedPlayer);
+  socketGamesInfo[gameId] = {
+    ...socketGamesInfo[gameId],
+    manager: newManagerId,
+    players: changedPlayer,
+  };
 };
 
 // 게임 정보에서 게임방 정보 삭제 (socketGamesInfo)
@@ -316,30 +312,29 @@ exports.deleteGameFromGamesInfo = (gameId) => {
 };
 
 // 게임 정보에서 특정 참가자 정보 삭제 (socketGamesInfo)
-exports.deletePlayerFromGamesInfo = (gameId, userId) => {
-  if (socketGamesInfo[gameId]) {
-    const changedPlayer = socketGamesInfo[gameId].players.filter(
-      (player) => player.userId !== userId,
+// exports.deletePlayerFromGamesInfo = (gameId, userId) => {
+//     const userInfo = exports.getPlayerFromUsersInfo(socketId);
+//   const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+//   if (socketGamesInfo[gameId]) {
+//     const changedPlayer = socketGamesInfo[gameId].players.filter(
+//       (player) => player.userId !== userId,
+//     );
+//     socketGamesInfo[gameId] = {
+//       ...socketGamesInfo[gameId],
+//       players: changedPlayer,
+//     };
+//   }
+// };
+exports.deletePlayerFromGamesInfo = (socketId) => {
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  if (socketGamesInfo[userInfo.gameId]) {
+    const changedPlayer = socketGamesInfo[userInfo.gameId].players.filter(
+      (player) => player.userId !== userInfo.userId,
     );
-    socketGamesInfo[gameId] = {
-      ...socketGamesInfo[gameId],
+    socketGamesInfo[userInfo.gameId] = {
+      ...socketGamesInfo[userInfo.gameId],
       players: changedPlayer,
     };
-    //02021 테스트
-    // socketGamesInfo[gameId].players = changedPlayer;
-  }
-};
-// socketGamesInfo[gameID]에서 ready 정보만 보이도록 formatting
-exports.formatReadyData = (playersInfo) => {
-  if (playersInfo) {
-    const playersReadyInfo = playersInfo.players.map((player) => {
-      return {
-        userId: player.userId,
-        nickname: player.nickname,
-        ready: player.ready,
-      };
-    });
-    return playersReadyInfo;
   }
 };
 
@@ -359,13 +354,14 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
 };
 
 // 게임 시작시 게임방 설정값 세팅 변경
-// spread 대신 직접 값 변경하기 추후에 변경 ######################################
 exports.setGameFromGamesInfo = ({
   gameId,
   newCurrentTurnUserId,
   newMaxRound,
   newCurrentRound,
   newKeywords,
+  newIsWaiting,
+  newIsAnswerFound,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
   if (gameInfo) {
@@ -377,10 +373,10 @@ exports.setGameFromGamesInfo = ({
       }),
       ...(newMaxRound !== undefined && { maxRound: newMaxRound }),
       ...(newKeywords !== undefined && { keywords: newKeywords }),
-      isWaiting: false,
+      ...(newIsWaiting !== undefined && { isWaiting: newIsWaiting }),
+      ...(newIsAnswerFound !== undefined && { isAnswerFound: newIsAnswerFound }),
     };
-
-    return socketGamesInfo[gameId];
+    console.log("게임 정보 세팅후 ", socketGamesInfo[gameId]);
   }
 };
 
@@ -390,7 +386,7 @@ exports.changeManagerOnLeave = async (nextUserId, gameId, transaction) => {
     // 방장 혼자 있을때
     await exports.updateGameRoom(gameId, { is_waiting: 0 }, transaction);
 
-    return { newManager: null, gameIsFinish: true };
+    return { newManagerId: null };
   } else {
     // 남은 유저가 있을때
     await exports.updateGameRoom(
@@ -400,13 +396,12 @@ exports.changeManagerOnLeave = async (nextUserId, gameId, transaction) => {
       },
       transaction,
     );
-    return { newManager: nextUserId, gameIsFinish: false };
+    return { newManagerId: nextUserId };
   }
 };
 
 // 처음 소켓 연결시 db에서 유저 정보 메모리에 저장 (socketUserInfo)
-exports.syncUserInfoFromDB = async (socket, userId) => {
-  // user_id값의 실제 유저 존재 여부 확인(토큰 변조)
+exports.syncUserInfoFromDB = async (socketId, userId) => {
   const findResult = await db.User.findOne({
     where: {
       user_id: userId,
@@ -414,7 +409,9 @@ exports.syncUserInfoFromDB = async (socket, userId) => {
     attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
     include: [{ model: db.Region, attributes: ["region"] }],
   });
+
   if (!findResult) throw new Error("존재하지 않는 유저입니다.");
+
   const { user_id, nickname, character } = findResult;
   const { region } = findResult.region;
   const userInfo = {
@@ -425,7 +422,7 @@ exports.syncUserInfoFromDB = async (socket, userId) => {
     gameId: null,
   };
 
-  exports.addPlayerToUsersInfo(userInfo, socket.id);
+  exports.setPlayerToUsersInfo(socketId, userInfo);
   console.log("유저 소켓연결후는 ", socketUsersInfo);
 };
 
@@ -491,4 +488,203 @@ exports.finishCurrentRound = (gameId) => {
   const gameInfo = socketGamesInfo[gameId];
   const newGameInfo = { ...gameInfo, isAnswerFound: true };
   socketGamesInfo[gameId] = newGameInfo;
+};
+
+// 턴 순서인 유저에게만 키워드 포함시켜서 응답처리
+exports.emitStartGameWithTurn = (io, socketId) => {
+  if (!io) {
+    console.error("io 객체가 없습니다.");
+    return;
+  }
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  if (!userInfo) {
+    console.error("조회하려는 userInfo가 없습니다.");
+    throw new Error("조회하려는 userInfo가 없습니다.");
+  }
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  if (!gameInfo) {
+    console.error("조회하려는 gameInfo가 없습니다.");
+    throw new Error("조회하려는 gameInfo가 없습니다.");
+  }
+
+  const clients = io.of("/game").adapter.rooms.get(userInfo.gameId);
+  console.log("현재 게임정보는 ", gameInfo);
+  if (clients) {
+    clients.forEach((socketId) => {
+      const playerSocket = io.of("/game").sockets.get(socketId);
+      if (!playerSocket) {
+        console.log("playerSocket이 없습니다.");
+        return;
+      }
+      const isTurn =
+        exports.getPlayerFromUsersInfo(playerSocket.id).userId ===
+        gameInfo.currentTurnUserId;
+      console.log("isTurn순서는", isTurn);
+      console.log(
+        "참여자 유저아이디는",
+        exports.getPlayerFromUsersInfo(playerSocket.id).userId,
+      );
+      console.log("게임정보의 현재턴유저아이디는", gameInfo.currentTurnUserId);
+      const startGameRes = exports.getStartRes(socketId, isTurn);
+      playerSocket.emit("startGame", startGameRes);
+    });
+  }
+};
+
+// ############################################################################################################
+// error 응답
+exports.getErrorRes = (socketId, message) => {
+  if (!socketId) {
+    console.error("보내려는 socketId가 없습니다.");
+    throw new Error("보내려는 socketId가 없습니다.");
+  }
+  if (!message) {
+    console.error("보내려는 error message가 없습니다.");
+    throw new Error("보내려는 error message가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  return {
+    type: "ERROR",
+    message: message,
+    data: {
+      userId: userInfo.userId || null,
+      gameId: userInfo.gameId || null,
+    },
+  };
+};
+
+// 성공 응답
+exports.successRes = (socketId, message) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  return {
+    type: "SUCCESS",
+    message: message,
+    data: {
+      userId: userInfo.userId || null,
+      gameId: userInfo.gameId || null,
+      gameName: gameInfo.name || null,
+      managerId: gameInfo.manager || null,
+    },
+  };
+};
+
+// joinGame 성공 응답
+exports.getJoinRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
+// leaveGame 성공 응답
+exports.getLeaveRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
+// readyGame 성공 응답
+exports.getReadyRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
+// gameMessage 성공 응답
+exports.getGameMessageRes = (socketId, gameMessage) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  if (!gameMessage) {
+    console.error("응답하려는 gameMessage가 없습니다.");
+    throw new Error("응답하려는 gameMessage가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  return {
+    type: "SUCCESS",
+    senderId: userInfo.userId,
+    senderNick: userInfo.nickname,
+    gameMessage: gameMessage,
+  };
+};
+
+// updatePlayers 성공 응답
+exports.getUpdatePlayersRes = (socketId) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  return {
+    type: "SUCCESS",
+    message: `유저 정보`,
+    data: {
+      gameId: userInfo.gameId || null,
+      gameName: gameInfo.name || null,
+      managerId: gameInfo.manager || null,
+      players: gameInfo.players || null,
+    },
+  };
+};
+
+// startGame 성공 응답
+exports.getStartRes = (socketId, isTurn) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  if (isTurn === undefined || isTurn === null) {
+    console.error("isTurn 순서가 없습니다.");
+    throw new Error("isTurn 순서가 없습니다.");
+  }
+
+  return {
+    type: "SUCCESS",
+    message: "게임 시작 성공",
+    data: {
+      currentTurnUserId: gameInfo.currentTurnUserId,
+      maxRound: gameInfo.maxRound,
+      currentRound: gameInfo.currentRound,
+      ...(isTurn && { keyword: gameInfo.keywords[gameInfo.currentRound - 1] }), // 현재 턴 유저에게만 키워드 포함
+    },
+  };
+};
+
+// drawCanvas 성공 응답
+exports.getDrawRes = (socketId, drawData) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+
+  return {
+    type: "SUCCESS",
+    message: "그리기 성공",
+    gameId: userInfo.gameId || null,
+    drawUserId: userInfo.userId || null,
+    data: drawData,
+  };
+};
+
+// clearCanvas 성공 응답
+exports.getClearRes = (socketId) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+
+  return {
+    type: "SUCCESS",
+    message: "그림 지우기 성공",
+    gameId: userInfo.gameId || null,
+    drawUserId: userInfo.userId || null,
+  };
 };
