@@ -22,6 +22,7 @@ const {
   joinGameToUsersInfo,
   leaveGameFromUsersInfo,
   deleteGameFromGamesInfo,
+  getUpdateGameInfoRes,
 } = require("./gameUtils");
 
 // 게임 참가 처리 로직
@@ -69,11 +70,11 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     // joinGame 성공 응답객체
     const joinGameRes = getJoinRes(socket.id, "입장 성공");
     // updateParticipants 성공 응답객체
-    const updateParticipantsRes = getUpdatePlayersRes(socket.id);
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
 
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
-    io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
+    io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
   } catch (err) {
     console.log(err);
     await transaction.rollback();

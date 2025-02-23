@@ -360,6 +360,7 @@ exports.setGameFromGamesInfo = ({
   newMaxRound,
   newCurrentRound,
   newKeywords,
+  newCurrentRoundKeyword,
   newIsWaiting,
   newIsAnswerFound,
 }) => {
@@ -373,6 +374,9 @@ exports.setGameFromGamesInfo = ({
       }),
       ...(newMaxRound !== undefined && { maxRound: newMaxRound }),
       ...(newKeywords !== undefined && { keywords: newKeywords }),
+      ...(newCurrentRoundKeyword !== undefined && {
+        currentRoundKeyword: newCurrentRoundKeyword,
+      }),
       ...(newIsWaiting !== undefined && { isWaiting: newIsWaiting }),
       ...(newIsAnswerFound !== undefined && { isAnswerFound: newIsAnswerFound }),
     };
@@ -441,8 +445,8 @@ exports.syncGameInfoFromDB = async () => {
 
     socketGamesInfo[game_id] = {
       name,
-      currentTurnUserId: 0,
-      currentRound: 1,
+      currentTurnUserId: null,
+      currentRound: null,
       maxRound: round,
       isLock: is_lock,
       pw,
@@ -491,7 +495,7 @@ exports.finishCurrentRound = (gameId) => {
 };
 
 // 턴 순서인 유저에게만 키워드 포함시켜서 응답처리
-exports.emitStartGameWithTurn = (io, socketId) => {
+exports.emitRoundStartWithTurn = (io, socketId, eventName) => {
   if (!io) {
     console.error("io 객체가 없습니다.");
     return;
@@ -529,8 +533,9 @@ exports.emitStartGameWithTurn = (io, socketId) => {
         exports.getPlayerFromUsersInfo(playerSocket.id).userId,
       );
       console.log("게임정보의 현재턴유저아이디는", gameInfo.currentTurnUserId);
-      const startGameRes = exports.getStartRes(socketId, isTurn);
-      playerSocket.emit("startGame", startGameRes);
+      const roundStartRes = exports.getRoundStartRes(socketId, isTurn);
+      // playerSocket.emit("startGame", roundStartRes);
+      playerSocket.emit(eventName, roundStartRes);
     });
   }
 };
@@ -572,7 +577,7 @@ exports.successRes = (socketId, message) => {
       userId: userInfo.userId || null,
       gameId: userInfo.gameId || null,
       gameName: gameInfo.name || null,
-      managerId: gameInfo.manager || null,
+      // managerId: gameInfo.manager || null,
     },
   };
 };
@@ -611,8 +616,8 @@ exports.getGameMessageRes = (socketId, gameMessage) => {
   };
 };
 
-// updatePlayers 성공 응답
-exports.getUpdatePlayersRes = (socketId) => {
+// roundEnd 성공 응답
+exports.getRoundEndRes = (socketId) => {
   if (!socketId) {
     console.error("조회하려는 socketId가 없습니다.");
     throw new Error("조회하려는 socketId가 없습니다.");
@@ -621,18 +626,41 @@ exports.getUpdatePlayersRes = (socketId) => {
   const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
   return {
     type: "SUCCESS",
-    message: `유저 정보`,
+    message: "라운드 종료",
+    gameId: gameInfo.gameId,
+    data: {
+      correctUserId: userInfo.userId,
+      answerKeyword: gameInfo.currentRoundKeyword,
+    },
+  };
+};
+
+// updatePlayers 성공 응답
+exports.getUpdateGameInfoRes = (socketId) => {
+  if (!socketId) {
+    console.error("조회하려는 socketId가 없습니다.");
+    throw new Error("조회하려는 socketId가 없습니다.");
+  }
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  return {
+    type: "SUCCESS",
+    message: `게임 정보`,
     data: {
       gameId: userInfo.gameId || null,
       gameName: gameInfo.name || null,
       managerId: gameInfo.manager || null,
+      currentTurnUserId: gameInfo.currentTurnUserId || null,
+      maxRound: gameInfo.maxRound || null,
+      currentRound: gameInfo.currentRound || null,
+      isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
       players: gameInfo.players || null,
     },
   };
 };
 
 // startGame 성공 응답
-exports.getStartRes = (socketId, isTurn) => {
+exports.getRoundStartRes = (socketId, isTurn) => {
   if (!socketId) {
     console.error("조회하려는 socketId가 없습니다.");
     throw new Error("조회하려는 socketId가 없습니다.");

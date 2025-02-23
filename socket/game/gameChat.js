@@ -7,9 +7,11 @@ const {
   finishCurrentRound,
   getParticipants,
   getErrorRes,
+  getUpdateGameInfoRes,
+  getRoundEndRes,
 } = require("./gameUtils");
 
-exports.gameChatHandler = async (io, socket, payload) => {
+exports.gameChatHandler = (io, socket, payload) => {
   // 게임 채팅 보내기
   const { message } = payload;
   try {
@@ -56,9 +58,8 @@ exports.gameChatHandler = async (io, socket, payload) => {
       console.log("채팅치는 사람 id와 메세지", userId, message);
       console.log("현재 턴", currentRound);
       console.log("현재 턴의 정답", socketGamesInfo[gameId].keywords);
-      console.log("현재 턴의 키워드", socketGamesInfo[gameId].keywords[currentRound - 1]);
-
-      const isAnswer = message === socketGamesInfo[gameId].keywords[currentRound - 1];
+      console.log("현재 턴의 키워드", socketGamesInfo[gameId].currentRoundKeyword);
+      const isAnswer = message === socketGamesInfo[gameId].currentRoundKeyword;
       console.log("보낸 메세지가 정답인가요?", isAnswer);
       if (isAnswer) {
         // 정답자는 gameInfo에 점수 업데이트
@@ -68,18 +69,12 @@ exports.gameChatHandler = async (io, socket, payload) => {
         // 정답 맞추면 해당 라운드 종료 처리 isAnswerFound 값을 true로 변경
         finishCurrentRound(gameId);
         console.log("정답시 정답자가 누군지 전체 메세지 보내기");
-        const newParticipants = getParticipants(gameId);
-        const updateParticipantsRes = {
-          type: "SUCCESS",
-          message: `유저 정보`,
-          data: {
-            gameId: gameId,
-            gameName: name || null,
-            players: newParticipants,
-          },
-        };
-        io.of("/game").to(gameId).emit("correctAnswer", { correctUserId: userId });
-        io.of("/game").to(gameId).emit("updateParticipants", updateParticipantsRes);
+
+        const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+        const roundEndRes = getRoundEndRes(socket.id);
+
+        io.of("/game").to(gameId).emit("roundEnd", roundEndRes);
+        io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
       }
     }
   } catch (err) {

@@ -7,7 +7,7 @@ const {
   getClearRes,
 } = require("./gameUtils");
 
-exports.drawCanvasHandler = async (io, socket, payload) => {
+exports.drawCanvasHandler = (io, socket, payload) => {
   // from 클리이언트 with x,y,brushColor
   const { x, y, brushColor } = payload;
   try {
@@ -45,7 +45,7 @@ exports.drawCanvasHandler = async (io, socket, payload) => {
   }
 };
 
-exports.clearCanvasHandler = async (io, socket, cb) => {
+exports.clearCanvasHandler = (io, socket, cb) => {
   try {
     // 유저 정보 조회
     const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
