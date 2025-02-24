@@ -2,17 +2,17 @@ const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db
-// exports.getGameRoom = async (gameId, is_waiting, transaction) => {
-//   console.log("isActive는", is_waiting);
-//   const game = await db.Game.findOne({
-//     where: {
-//       game_id: gameId,
-//       is_waiting: Number(!is_waiting),
-//     },
-//     transaction,
-//   });
-//   return game;
-// };
+exports.getGameRoom = async (gameId, is_waiting, transaction) => {
+  console.log("isActive는", is_waiting);
+  const game = await db.Game.findOne({
+    where: {
+      game_id: gameId,
+      is_waiting: Number(is_waiting),
+    },
+    transaction,
+  });
+  return game;
+};
 
 // 방장 변경( 방장이 아닌 유저가 퇴장할 경우) db
 exports.updateGameRoom = async (gameId, changeValue, transaction) => {

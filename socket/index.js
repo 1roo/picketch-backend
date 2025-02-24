@@ -17,7 +17,7 @@ async function socketHandler(server) {
   game.use(authSocketMiddleware);
   // 서버 재실행시 is_waiting이 true인 방만 메모리에 저장
   // 나중에 방만들때는 메모리에 저장해야함
-  await syncGameInfoFromDB();
+  // await syncGameInfoFromDB();
 
   // game
   game.on("connection", (socket) => gameSocket(io, socket));
