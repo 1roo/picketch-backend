@@ -140,6 +140,18 @@ schemas:
       message: "Success"
 
   # 프로필
+  NicknameResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
   ProfileRequest:
     type: object
     required:

@@ -3,6 +3,7 @@ const userRouter = express.Router();
 const userController = require("../controllers/userController");
 const authMiddleware = require("../middleware/authMiddleware");
 
+userRouter.get("/profile/check-nickname", userController.checkNickname);
 userRouter.post("/profile", authMiddleware, userController.createProfile);
 userRouter.get("/profile/me", authMiddleware, userController.getUser);
 userRouter.patch("/profile/me", authMiddleware, userController.patchUser);

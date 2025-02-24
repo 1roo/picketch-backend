@@ -7,6 +7,27 @@ const {
 } = require("../utils/common");
 
 const userController = {
+  // 닉네임 중복 확인
+  checkNickname: async (req, res) => {
+    try {
+      const { nickname } = req.query;
+
+      if (!nickname) {
+        return validationError(res);
+      }
+
+      const existingUser = await User.findOne({ where: { nickname } });
+
+      if (existingUser) {
+        return duplicateNickname(res);
+      }
+
+      success(res, "Success");
+    } catch (err) {
+      databaseError(res, err);
+    }
+  },
+
   // 프로필 생성
   createProfile: async (req, res) => {
     try {
@@ -15,14 +36,6 @@ const userController = {
 
       if (!nickname || !character || !regionId) {
         return validationError(res);
-      }
-
-      const existingUser = await User.findOne({
-        where: { nickname },
-      });
-
-      if (existingUser) {
-        return duplicateNickname(res);
       }
 
       await User.update(
@@ -106,14 +119,6 @@ const userController = {
 
       if (!nickname || !character) {
         return validationError(res);
-      }
-
-      const existingUser = await User.findOne({
-        where: { nickname },
-      });
-
-      if (existingUser) {
-        return duplicateNickname(res);
       }
 
       await User.update(
