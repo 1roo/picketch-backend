@@ -11,8 +11,12 @@ exports.socketUsersInfo = {};
 //     isLock : true,
 //     pw : "1234"
 //     manager : 1
-//     isWaiting : true,
-//     keywords : ["사과","수박",....], // 전체 라운드만큼 가지고 있음
+//     isWaiting : true, // 게임 대기중 or 게임 시작
+//     keywords : ["사과","수박",....], // 전체 라운드만큼 가지고 있음,
+//     currentRoundKeyword : "사과", // 현재 라운드의 정답
+//     isAnswerFound : false, // 현재 라운드 정답 제출 여부
+//     isNextRoundSettled : true, // 다음 라운드 설정값 세팅 여부
+//     isGameEnd : false, // 게임종료 처리 여부
 //     players : [
 //       {
 //         userId : 1,

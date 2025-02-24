@@ -7,11 +7,11 @@ const {
   nextTurnHandler,
   endGameHandler,
 } = require("./gameSetup");
-const { syncUserInfoFromDB } = require("./gameUtils");
+const { setPlayerToUsersInfo } = require("./gameUtils");
 
 exports.gameSocket = async (io, socket) => {
   // 소켓연결하는 유저 저장 (socketUserInfo)
-  await syncUserInfoFromDB(socket.id, socket.userId);
+  setPlayerToUsersInfo(socket.id, socket.userInfo);
 
   // 게임방 입장
   socket.on("joinGame", async (payload) => {
