@@ -29,17 +29,16 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   try {
     // const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(gameId);
-    // 요청값 유효성 검증
+    // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
-    if (gameInfo.isLock && typeof inputPw !== "number")
-      throw new Error("유효한 pw 정보가 없습니다.");
 
     // 참가 가능 방 여부 확인
-    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
     // 비밀번호 유효성 검증
+    if (gameInfo.isLock && typeof inputPw !== "number")
+      throw new Error("유효한 pw 정보가 없습니다.");
     if (gameInfo.isLock && inputPw !== gameInfo.pw) {
       throw new Error("비밀번호가 일치하지 않습니다.");
     }

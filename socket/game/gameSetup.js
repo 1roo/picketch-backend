@@ -38,7 +38,7 @@ exports.readyGameHandler = async (io, socket) => {
     toggleReadyGamesInfo(userInfo.gameId, userInfo.userId);
 
     // readyGame 성공 응답객체
-    const readyGameRes = getReadyRes(socket.id, "준비 성공");
+    const readyGameRes = getReadyRes(socket.id, "게임 준비");
     // updateParticipants 성공 응답객체
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
 
