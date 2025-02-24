@@ -59,3 +59,14 @@ VALUES
 (7,10,'FRIEND_REQUEST','PENDING','나미리님이 친구 요청을 보냈습니다.',NOW(),NOW()),
 (8,10,'FRIEND_REQUEST','PENDING','엄마님이 친구 요청을 보냈습니다.',NOW(),NOW());
 
+
+INSERT INTO `player_group`(`game_id`,`user_id`)
+VALUES
+(1,2),
+(1,3),
+(1,4);
+INSERT INTO `player_group`(`game_id`,`user_id`)
+VALUES
+(2,8);
+(2,6),
+(2,7);
