@@ -1,3 +1,37 @@
+/user/profile/check-nickname:
+  get:
+    tags:
+      - User
+    summary: 닉네임 중복검사
+    parameters:
+      - name: nickname
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: 닉네임 사용 가능
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NicknameResponse"
+      "400":
+        description: 유효성 검사 실패 및 중복된 닉네임
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Error"
+            examples:
+              validationFailed:
+                value:
+                  code: "VF"
+                  message: "Validation failed."
+              duplicateNickname:
+                value:
+                  code: "DN"
+                  message: "Duplicated nickname."
+
 /user/profile:
   post:
     tags:
@@ -19,7 +53,7 @@
             schema:
               $ref: "#/components/schemas/ProfileResponse"
       "400":
-        description: 유효성 검사 실패 또는 중복된 닉네임
+        description: 유효성 검사 실패
         content:
           application/json:
             schema:
@@ -29,10 +63,6 @@
                 value:
                   code: "VF"
                   message: "Validation failed."
-              duplicateNickname:
-                value:
-                  code: "DN"
-                  message: "Duplicated nickname."
       "401":
         description: 인증 실패
         content:
@@ -87,7 +117,7 @@
             schema:
               $ref: "#/components/schemas/UpdateUserResponse"
       "400":
-        description: 유효성 검사 실패 또는 중복된 닉네임
+        description: 유효성 검사 실패
         content:
           application/json:
             schema:
@@ -97,10 +127,6 @@
                 value:
                   code: "VF"
                   message: "Validation failed."
-              duplicateNickname:
-                value:
-                  code: "DN"
-                  message: "Duplicated nickname."
       "401":
         description: 인증 실패
         content:
