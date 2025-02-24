@@ -20,38 +20,6 @@ const throwError = (code, status, message) => {
   throw error;
 };
 
-// 키워드 랜덤으로 추출하기
-exports.getRandomKeyword = async (req, res) => {
-  const { gameId } = req.query;
-
-  try {
-    // 유효성 검사
-    if (typeof gameId !== "number") {
-      throwError("VF", 400, "유효하지 않은 숫자입니다.");
-    }
-
-    // 해당방에 유저가 존재하는지 여부 확인
-
-    if (!roomName || !room) {
-      throwError("VF", 400, "방이 유효하지 않습니다.");
-    }
-
-    // 같은방에 생성된 랜덤 키워드가 없는 경우
-    const result = await db.Keyword.findAll({
-      order: db.sequelize.random(),
-      limit: count,
-    });
-
-    const keywords = result.map((element) => element.dataValues);
-    const message = `키워드 ${keywords.length}개 조회 성공`;
-    randomKeywords[roomName] = keywords;
-    sendResponse(res, "SU", 200, message, keywords);
-  } catch (err) {
-    console.log(err);
-    sendResponse(res, err.code, err.status, err.message);
-  }
-};
-
 // 최종 점수 db 저장
 exports.setFinalScore = async (req, res) => {
   const { gameId, userId } = req.body;

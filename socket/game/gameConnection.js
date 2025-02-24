@@ -11,7 +11,6 @@ const {
   getGameInfoByGameId,
   getParticipants,
   changeManagerInGame,
-  getUpdatePlayersRes,
   getJoinRes,
   getErrorRes,
   getLeaveRes,
@@ -64,7 +63,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     socket.join(gameId);
 
     // joinGame 성공 응답객체
-    const joinGameRes = getJoinRes(socket.id, "입장 성공");
+    const joinGameRes = getJoinRes(socket.id, "게임방 입장");
     // updateParticipants 성공 응답객체
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
 
@@ -148,8 +147,6 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     const gameInfo1 = socketGamesInfo;
     console.log("퇴장후 유저", userInfo1);
     console.log("퇴장후 게임", gameInfo1);
-    // 퇴장이 발생한방 전체 알림
-    // io.of("/game").to(gameId).emit("leaveGame", leaveGameRes);
     socket.emit("leaveGame", leaveGameRes);
     io.of("/game").to(userInfo.gameId).emit("updateParticipants", updateGameInfoRes);
   } catch (err) {

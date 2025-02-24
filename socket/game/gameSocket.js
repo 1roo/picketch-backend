@@ -1,7 +1,12 @@
 const { drawCanvasHandler, clearCanvasHandler } = require("./gameCanvas");
 const { gameChatHandler } = require("./gameChat");
 const { joinGameRoomHandler, leaveGameRoomHandler } = require("./gameConnection");
-const { readyGameHandler, startGameHandler, nextTurnHandler } = require("./gameSetup");
+const {
+  readyGameHandler,
+  startGameHandler,
+  nextTurnHandler,
+  endGameHandler,
+} = require("./gameSetup");
 const { syncUserInfoFromDB } = require("./gameUtils");
 
 exports.gameSocket = async (io, socket) => {
@@ -21,8 +26,12 @@ exports.gameSocket = async (io, socket) => {
     await startGameHandler(io, socket);
   });
   // 다음 라운드 시작
-  socket.on("nextTurn", async () => {
+  socket.on("nextTurn", () => {
     nextTurnHandler(io, socket);
+  });
+  // 게임 종료
+  socket.on("endGame", async () => {
+    await endGameHandler(io, socket);
   });
   // 게임방 퇴장
   socket.on("leaveGame", async () => {

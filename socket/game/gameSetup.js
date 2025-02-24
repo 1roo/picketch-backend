@@ -1,3 +1,5 @@
+const { setFinalScore } = require("../../controllers/gameController");
+const db = require("../../models");
 const { socketGamesInfo } = require("./gameStore");
 const {
   getPlayerFromUsersInfo,
@@ -13,6 +15,9 @@ const {
   getUpdateGameInfoRes,
   emitRoundStartWithTurn,
   getEndGameRes,
+  getParticipants,
+  setPlayersScore,
+  setGameEnd,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -104,6 +109,7 @@ exports.startGameHandler = async (io, socket) => {
     const newKeywords = await getRandomKeywords(newMaxRound);
     const newCurrentRoundKeyword = newKeywords[newCurrentRound - 1];
     const newIsNextRoundSettled = true;
+    const newIsGameEnd = false;
 
     setGameFromGamesInfo({
       gameId,
@@ -115,6 +121,7 @@ exports.startGameHandler = async (io, socket) => {
       newIsWaiting,
       newIsAnswerFound,
       newIsNextRoundSettled,
+      newIsGameEnd,
     });
 
     console.log("게임시작시 게임정보", socketGamesInfo[gameId]);
@@ -145,16 +152,11 @@ exports.nextTurnHandler = (io, socket) => {
     if (!isEntering) throw new Error("참가 중인 방이 아닙니다.");
     // 현재 라운드가 종료되었는지 확인
     if (!gameInfo.isAnswerFound) throw new Error("현재 라운드가 종료되지 않았습니다.");
-    // 마지막 라운드를 넘었는지 확인
+    // nextTurn 요청이 올때 마지막 라운드인지 확인
     if (gameInfo.currentRound >= gameInfo.maxRound) {
-      console.log("마지막 라운드가 끝나서 게임 종료 처리");
-      const endGameRes = getEndGameRes(socket.id, "게임 종료");
-      const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
-      io.of("/game").to(userInfo.gameId).emit("endGame", endGameRes);
-      io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
-      return;
+      throw new Error("현재 마지막 라운드입니다.");
     }
-
+    console.log("nextTurn 요청시 게임정보", gameInfo);
     // 다음 라운드 게임을 하기위한 세팅값 설정
     const gameId = userInfo.gameId;
     const currentTurnUserIndex = gameInfo.players.findIndex(
@@ -166,7 +168,7 @@ exports.nextTurnHandler = (io, socket) => {
     const nextIsAnswerFound = false;
     const nextCurrentRoundKeyword = gameInfo.keywords[nextCurrentRound - 1];
     const nextIsNextRoundSettled = true;
-
+    const nextIsGameEnd = false;
     setGameFromGamesInfo({
       gameId,
       newCurrentTurnUserId: nextCurrentTurnUserId,
@@ -174,6 +176,7 @@ exports.nextTurnHandler = (io, socket) => {
       newCurrentRoundKeyword: nextCurrentRoundKeyword,
       newIsAnswerFound: nextIsAnswerFound,
       newIsNextRoundSettled: nextIsNextRoundSettled,
+      newIsGameEnd: nextIsGameEnd,
     });
 
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
@@ -184,7 +187,49 @@ exports.nextTurnHandler = (io, socket) => {
     console.log(err);
     const nextTurnErrRes = getErrorRes(socket.id, err.message);
     socket.emit("nextTurn", nextTurnErrRes);
-  } finally {
-    isNextTurnProgressing = false;
+  }
+};
+
+//
+exports.endGameHandler = async (io, socket) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    const userInfo = getPlayerFromUsersInfo(socket.id);
+    const gameInfo = getGameInfoByGameId(userInfo.gameId);
+    // 게임 종료된 이후 들어오는 요청 무시
+    if (gameInfo.isGameEnd) {
+      return;
+    }
+    if (gameInfo.isWaiting) throw new Error("대기중인 방입니다.");
+    // 내가 참가중인 방인지 확인
+    const isEntering = isUserInGame(userInfo.gameId, userInfo.userId);
+    if (!isEntering) throw new Error("참가 중인 방이 아닙니다.");
+    // 마지막 라운드에 도달했는지 확인
+    if (gameInfo.currentRound < gameInfo.maxRound) {
+      throw new Error("마지막 라운드아닙니다.");
+    }
+    // 정답 제출 여부 확인
+    if (!gameInfo.isAnswerFound) {
+      throw new Error("정답이 제출되지 않았습니다.");
+    }
+
+    // db에 유저들 최종 점수 업데이트
+    const playersInfo = getParticipants(userInfo.gameId);
+    await setPlayersScore(playersInfo, transaction);
+    transaction.commit();
+
+    // 게임방 종료처리
+    setGameEnd(socket.id);
+    console.log("endGame 요청 후 게임정보 ", socketGamesInfo[userInfo.gameId]);
+    const endGameRes = getEndGameRes(socket.id);
+    console.log("endGame시 응답값", endGameRes);
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+    io.of("/game").to(userInfo.gameId).emit("endGame", endGameRes);
+    io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
+  } catch (err) {
+    transaction.rollback();
+    console.log(err);
+    const endGameErrRes = getErrorRes(socket.id, err.message);
+    socket.emit("endGame", endGameErrRes);
   }
 };
