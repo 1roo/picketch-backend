@@ -602,8 +602,6 @@ exports.successRes = (socketId, message) => {
     data: {
       userId: userInfo.userId || null,
       gameId: userInfo.gameId || null,
-      gameName: gameInfo.name || null,
-      // managerId: gameInfo.manager || null,
     },
   };
 };
