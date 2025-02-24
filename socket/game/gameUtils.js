@@ -2,29 +2,29 @@ const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db
-exports.getGameRoom = async (gameId, is_waiting, transaction) => {
-  console.log("isActive는", is_waiting);
-  const game = await db.Game.findOne({
-    where: {
-      game_id: gameId,
-      is_waiting: Number(!is_waiting),
-    },
-    transaction,
-  });
-  return game;
-};
+// exports.getGameRoom = async (gameId, is_waiting, transaction) => {
+//   console.log("isActive는", is_waiting);
+//   const game = await db.Game.findOne({
+//     where: {
+//       game_id: gameId,
+//       is_waiting: Number(!is_waiting),
+//     },
+//     transaction,
+//   });
+//   return game;
+// };
 
 // 유저가 방에 참가중인지 확인 db
-exports.checkValidRoom = async (gameId, userId, transaction) => {
-  const checkResult = await db.PlayerGroup.findOne({
-    where: {
-      game_id: gameId,
-      user_id: userId,
-    },
-  });
+// exports.checkValidRoom = async (gameId, userId, transaction) => {
+//   const checkResult = await db.PlayerGroup.findOne({
+//     where: {
+//       game_id: gameId,
+//       user_id: userId,
+//     },
+//   });
 
-  return checkResult;
-};
+//   return checkResult;
+// };
 
 // 방장 변경( 방장이 아닌 유저가 퇴장할 경우) db
 exports.updateGameRoom = async (gameId, changeValue, transaction) => {
@@ -89,36 +89,36 @@ exports.updateWaitingStatus = async (gameId) => {
 };
 
 // 남은 참가자 조회 db
-exports.getRestParticipants = async (game, transaction) => {
-  const currentPlayersResult = await db.PlayerGroup.findAll({
-    where: {
-      game_id: game.game_id,
-    },
-    include: [
-      {
-        model: db.User,
-        attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
-        include: [{ model: db.Region, attributes: ["region"] }],
-      },
-    ],
-    raw: false,
-    transaction,
-  });
+// exports.getRestParticipants = async (game, transaction) => {
+//   const currentPlayersResult = await db.PlayerGroup.findAll({
+//     where: {
+//       game_id: game.game_id,
+//     },
+//     include: [
+//       {
+//         model: db.User,
+//         attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
+//         include: [{ model: db.Region, attributes: ["region"] }],
+//       },
+//     ],
+//     raw: false,
+//     transaction,
+//   });
 
-  return currentPlayersResult;
-};
+//   return currentPlayersResult;
+// };
 
 // 모델 인스턴스에서 참가자 정보만 map
-exports.formatParticipantData = (playerInstances) => {
-  return playerInstances.map((playerInstance) => {
-    return {
-      participantId: playerInstance.user.user_id,
-      participantNick: playerInstance.user.nickname,
-      participantProfile: playerInstance.user.character,
-      participantRegion: playerInstance.user.region.region,
-    };
-  });
-};
+// exports.formatParticipantData = (playerInstances) => {
+//   return playerInstances.map((playerInstance) => {
+//     return {
+//       participantId: playerInstance.user.user_id,
+//       participantNick: playerInstance.user.nickname,
+//       participantProfile: playerInstance.user.character,
+//       participantRegion: playerInstance.user.region.region,
+//     };
+//   });
+// };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
