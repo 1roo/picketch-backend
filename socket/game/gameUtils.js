@@ -191,7 +191,7 @@ exports.deletePlayerUsersInfo = (socketId) => {
 exports.getGameInfoByGameId = (gameId) => {
   if (!gameId) throw new Error("조회하려는 gameId 값이 없습니다.");
   const gameInfo = socketGamesInfo[gameId];
-  if (!gameInfo) throw new Error("gameInfo에서 해당 게임을 찾을 수 없습니다.");
+  if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
   console.log("gameInfo 조회값은 ", gameInfo);
   return gameInfo;
 };
@@ -311,20 +311,6 @@ exports.deleteGameFromGamesInfo = (gameId) => {
   }
 };
 
-// 게임 정보에서 특정 참가자 정보 삭제 (socketGamesInfo)
-// exports.deletePlayerFromGamesInfo = (gameId, userId) => {
-//     const userInfo = exports.getPlayerFromUsersInfo(socketId);
-//   const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
-//   if (socketGamesInfo[gameId]) {
-//     const changedPlayer = socketGamesInfo[gameId].players.filter(
-//       (player) => player.userId !== userId,
-//     );
-//     socketGamesInfo[gameId] = {
-//       ...socketGamesInfo[gameId],
-//       players: changedPlayer,
-//     };
-//   }
-// };
 exports.deletePlayerFromGamesInfo = (socketId) => {
   const userInfo = exports.getPlayerFromUsersInfo(socketId);
   if (socketGamesInfo[userInfo.gameId]) {
@@ -336,6 +322,16 @@ exports.deletePlayerFromGamesInfo = (socketId) => {
       players: changedPlayer,
     };
   }
+};
+
+// socketGamesInfo 게임진행정보에서 isGameEnd를 true로 종료처리
+exports.setGameEnd = (socketId) => {
+  const userInfo = exports.getPlayerFromUsersInfo(socketId);
+  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  socketGamesInfo[userInfo.gameId] = {
+    ...socketGamesInfo[userInfo.gameId],
+    isGameEnd: true,
+  };
 };
 
 // socketGamesInfo 게임진행정보에서 사용자의 ready상태 토글
@@ -364,11 +360,12 @@ exports.setGameFromGamesInfo = ({
   newIsWaiting,
   newIsAnswerFound,
   newIsNextRoundSettled,
+  newIsGameEnd,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
   if (gameInfo) {
     socketGamesInfo[gameId] = {
-      ...gameInfo,
+      ...socketGamesInfo[gameId],
       ...(newCurrentRound !== undefined && { currentRound: newCurrentRound }),
       ...(newCurrentTurnUserId !== undefined && {
         currentTurnUserId: newCurrentTurnUserId,
@@ -382,6 +379,9 @@ exports.setGameFromGamesInfo = ({
       ...(newIsAnswerFound !== undefined && { isAnswerFound: newIsAnswerFound }),
       ...(newIsNextRoundSettled !== undefined && {
         isNextRoundSettled: newIsNextRoundSettled,
+      }),
+      ...(newIsGameEnd !== undefined && {
+        isGameEnd: newIsGameEnd,
       }),
     };
     console.log("게임 정보 세팅후 ", socketGamesInfo[gameId]);
@@ -406,6 +406,20 @@ exports.changeManagerOnLeave = async (nextUserId, gameId, transaction) => {
     );
     return { newManagerId: nextUserId };
   }
+};
+
+// 유저 별 score 점수 합산 update
+exports.setPlayersScore = async (playersInfo, transaction) => {
+  const updatePromises = playersInfo.map((player) => {
+    return db.User.update(
+      {
+        user_score: db.Sequelize.literal(`user_score + ${player.score}`),
+      },
+      { where: { user_id: player.userId }, transaction: transaction },
+    );
+  });
+  // 전체 쿼리 동시에 실행
+  await Promise.all(updatePromises);
 };
 
 // 처음 소켓 연결시 db에서 유저 정보 메모리에 저장 (socketUserInfo)
@@ -460,6 +474,7 @@ exports.syncGameInfoFromDB = async () => {
       currentRoundKeyword: null,
       isAnswerFound: null,
       isNextRoundSettled: null,
+      isGameEnd: null,
       // 참여했던 유저들 그대로 포함시킬지?
       players: [],
     };
@@ -587,8 +602,6 @@ exports.successRes = (socketId, message) => {
     data: {
       userId: userInfo.userId || null,
       gameId: userInfo.gameId || null,
-      gameName: gameInfo.name || null,
-      // managerId: gameInfo.manager || null,
     },
   };
 };
@@ -619,7 +632,7 @@ exports.getEndGameRes = (socketId) => {
   return {
     type: "SUCCESS",
     message: "게임 종료",
-    gameId: gameInfo.gameId,
+    gameId: userInfo.gameId,
   };
 };
 
@@ -701,11 +714,12 @@ exports.getRoundStartRes = (socketId, isTurn) => {
 
   return {
     type: "SUCCESS",
-    message: "라운드 시작",
+    message: "라운드 정보",
     data: {
       currentTurnUserId: gameInfo.currentTurnUserId,
       maxRound: gameInfo.maxRound,
       currentRound: gameInfo.currentRound,
+      isGameEnd: gameInfo.isGameEnd,
       ...(isTurn && { keyword: gameInfo.keywords[gameInfo.currentRound - 1] }), // 현재 턴 유저에게만 키워드 포함
     },
   };

@@ -11,7 +11,6 @@ const {
   getGameInfoByGameId,
   getParticipants,
   changeManagerInGame,
-  getUpdatePlayersRes,
   getJoinRes,
   getErrorRes,
   getLeaveRes,
@@ -28,17 +27,18 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
-    // 요청값 유효성 검증
+    // const userInfo = getPlayerFromUsersInfo(socket.id);
+    const gameInfo = getGameInfoByGameId(gameId);
+    // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
-    if (typeof inputPw !== "string") throw new Error("유효한 pw 정보가 없습니다.");
 
     // 참가 가능 방 여부 확인
-    const gameInfo = getGameInfoByGameId(gameId);
-    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
     // 비밀번호 유효성 검증
+    if (gameInfo.isLock && typeof inputPw !== "number")
+      throw new Error("유효한 pw 정보가 없습니다.");
     if (gameInfo.isLock && inputPw !== gameInfo.pw) {
       throw new Error("비밀번호가 일치하지 않습니다.");
     }
@@ -64,7 +64,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     socket.join(gameId);
 
     // joinGame 성공 응답객체
-    const joinGameRes = getJoinRes(socket.id, "입장 성공");
+    const joinGameRes = getJoinRes(socket.id, "게임방 입장");
     // updateParticipants 성공 응답객체
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
 
@@ -148,8 +148,6 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
     const gameInfo1 = socketGamesInfo;
     console.log("퇴장후 유저", userInfo1);
     console.log("퇴장후 게임", gameInfo1);
-    // 퇴장이 발생한방 전체 알림
-    // io.of("/game").to(gameId).emit("leaveGame", leaveGameRes);
     socket.emit("leaveGame", leaveGameRes);
     io.of("/game").to(userInfo.gameId).emit("updateParticipants", updateGameInfoRes);
   } catch (err) {
