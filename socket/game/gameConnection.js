@@ -23,7 +23,8 @@ const {
 
 // 게임 참가 처리 로직
 exports.joinGameRoomHandler = async (io, socket, payload) => {
-  const { gameId, inputPw } = payload;
+  const gameId = payload.gameId;
+  const inputPw = Number(payload.inputPw);
 
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
@@ -44,7 +45,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
         maxRound: game.round,
         isLock: game.is_lock,
         pw: game.pw,
-        manager: game.pw,
+        manager: game.manager,
         isWaiting: game.is_waiting,
         keywords: null,
         currentRoundKeyword: null,
