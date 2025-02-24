@@ -1,4 +1,3 @@
-const { setFinalScore } = require("../../controllers/gameController");
 const db = require("../../models");
 const { socketGamesInfo } = require("./gameStore");
 const {
