@@ -1,28 +1,27 @@
 const db = require("../models");
-const { success, databaseError } = require("../utils/common");
+const { success, databaseError, validationErrorWithMessage } = require("../utils/common");
 
 exports.getRankingUser = async (req, res) => {
   try {
-    const userRanking = await db.User.findAll({
-      attributes: [["user_id", "userId"], "nickname", ["user_score", "score"]],
-      order: [["score", "DESC"]], // 높은 점수 순으로 정렬
+    const userId = 2;
+    // const userId=req.user.user_id
+
+    let Ranking = await db.User.findAll({
+      attributes: ["user_id", "user_score"],
+      order: [["user_score", "DESC"]], // 높은 점수 순으로 정렬
     });
-    if (!userRanking) {
+    if (Ranking.length === 0) {
       databaseError(res, "유저 랭킹 조회 실패");
     }
-    // userRanking = [
-    //   {
-    //   "user_id": 1,
-    //   "nickname": "짱구",
-    //   "score": 2930
-    //   },
-    //   {
-    //   "user_id": 3,
-    //   "nickname": "훈이",
-    //   "score": 2905
-    //   },
-    //   ]
+    const totalUsers = Ranking.length;
+    const rank = Ranking.findIndex((user) => user.user_id === userId) + 1; // 인덱스는 0부터 시작하므로 1을 더함
 
+    const percentage = ((rank / totalUsers) * 100).toFixed(2);
+    console.log(totalUsers, rank, percentage);
+    const userRanking = {
+      userId,
+      percentage,
+    };
     success(res, "Success", { userRanking });
   } catch (err) {
     databaseError(res, err);
@@ -31,13 +30,32 @@ exports.getRankingUser = async (req, res) => {
 
 exports.getRankingRegion = async (req, res) => {
   try {
-    const regionRanking = await db.Region.findAll({
-      attributes: ["region", ["region_score", "score"]],
-      order: [["region_score", "DESC"]], // 높은 점수 순으로 정렬
+    const userId = 9;
+    // const userId=req.user.user_id
+    const userInfo = await db.User.findOne({
+      attributes: ["user_id", "user_score", "region_id"],
+      where: { user_id: userId },
     });
-    if (!regionRanking) {
-      databaseError(res, "지역 랭킹 조회 실패");
+    if (!userInfo) return validationError(res);
+
+    let Ranking = await db.User.findAll({
+      attributes: ["user_id", "user_score"],
+      where: { region_id: userInfo.region_id },
+      order: [["user_score", "DESC"]],
+    });
+    if (Ranking.length === 0) {
+      databaseError(res, "유저 랭킹 조회 실패");
     }
+    const totalUsers = Ranking.length;
+    const rank = Ranking.findIndex((user) => user.user_id === userId) + 1; // 인덱스는 0부터 시작하므로 1을 더함
+
+    const percentage = ((rank / totalUsers) * 100).toFixed(2);
+    console.log(totalUsers, rank, percentage);
+    const regionRanking = {
+      userId,
+      regionId: userInfo.region_id,
+      percentage,
+    };
     success(res, "Success", { regionRanking });
   } catch (err) {
     databaseError(res, err);
