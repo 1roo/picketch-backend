@@ -16,7 +16,7 @@ const Game = (sequelize, DataTypes) => {
       },
       manager: { type: DataTypes.INTEGER, allowNull: false, comment: "게임 방장" },
       is_lock: { type: DataTypes.BOOLEAN, allowNull: false, comment: "비밀번호 유무" },
-      pw: { type: DataTypes.STRING(20), allowNull: true, comment: "비밀번호" },
+      pw: { type: DataTypes.INTEGER(50), allowNull: true, comment: "비밀번호" },
       round: { type: DataTypes.INTEGER(50), allowNull: false, comment: "라운드 수" },
       is_waiting: {
         type: DataTypes.BOOLEAN,
