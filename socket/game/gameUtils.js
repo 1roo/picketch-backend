@@ -300,7 +300,6 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
       }
       return player;
     });
-    console.log("ready 바뀐 값", changedPlayerInfo);
     gameInfo.players = [...changedPlayerInfo];
   }
 };
@@ -546,11 +545,6 @@ exports.getLeaveRes = (socketId, message) => {
   return exports.successRes(socketId, message);
 };
 
-// readyGame 성공 응답
-exports.getReadyRes = (socketId, message) => {
-  return exports.successRes(socketId, message);
-};
-
 // endGame 성공 응답
 exports.getEndGameRes = (socketId) => {
   if (!socketId) {
@@ -626,6 +620,19 @@ exports.getUpdateGameInfoRes = (socketId) => {
       isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
       players: gameInfo.players || null,
     },
+  };
+};
+
+// readyGame 성공 응답
+exports.getReadyRes = (socketId) => {
+  const userInfo = socketUsersInfo[socketId];
+  const isAllReady = exports.checkAllReady(userInfo.gameId);
+  return {
+    type: "SUCCESS",
+    message: "게임 준비",
+    gameId: userInfo.gameId || null,
+    userId: userInfo.userId || null,
+    data: { isAllReady: isAllReady },
   };
 };
 
