@@ -10,6 +10,19 @@ exports.getRankingUser = async (req, res) => {
     if (!userRanking) {
       databaseError(res, "유저 랭킹 조회 실패");
     }
+    // userRanking = [
+    //   {
+    //   "user_id": 1,
+    //   "nickname": "짱구",
+    //   "score": 2930
+    //   },
+    //   {
+    //   "user_id": 3,
+    //   "nickname": "훈이",
+    //   "score": 2905
+    //   },
+    //   ]
+
     success(res, "Success", { userRanking });
   } catch (err) {
     databaseError(res, err);

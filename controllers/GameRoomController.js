@@ -9,11 +9,31 @@ const {
 // 게임방 리스트 조회
 exports.getGameRoom = async (req, res) => {
   try {
-    const gameRooms = await db.Game.findAll({
+    // const gameRooms = await db.Game.findAll({
+    //   attributes: [["game_id", "roomId"], ["name", "roomName"], "is_lock", "pw"],
+    //   where: { is_waiting: true },
+    // });
+    // const playerCount = await db.PlayerGroup.count({
+    //   where: { game_id: gameRooms.game_id },
+    // });
+
+    const waitingRooms = await db.Game.findAll({
       attributes: [["game_id", "roomId"], ["name", "roomName"], "is_lock", "pw"],
       where: { is_waiting: true },
+      include: [
+        {
+          model: db.PlayerGroup,
+          attributes: [
+            [
+              db.sequelize.fn("COUNT", db.sequelize.col("player_group_id")),
+              "playerCount",
+            ],
+          ],
+          group: ["game_id", "name", "is_lock", "pw"],
+        },
+      ],
     });
-    success(res, "Success", { gameRooms });
+    success(res, "Success", { waitingRooms });
   } catch (err) {
     databaseError(res, err);
   }
@@ -22,7 +42,9 @@ exports.getGameRoom = async (req, res) => {
 // 게임방 생성
 exports.addGameRoom = async (req, res) => {
   try {
-    const user = req.user.user_id;
+    // const user = req.user.user_id;
+    const user = 1;
+
     // is_waiting 빼기 나중에
     const { roomName, round, isLock, pw, is_waiting } = req.body;
     // 유효성 검사
