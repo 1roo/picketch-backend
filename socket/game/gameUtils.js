@@ -14,18 +14,6 @@ const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 //   return game;
 // };
 
-// 유저가 방에 참가중인지 확인 db
-// exports.checkValidRoom = async (gameId, userId, transaction) => {
-//   const checkResult = await db.PlayerGroup.findOne({
-//     where: {
-//       game_id: gameId,
-//       user_id: userId,
-//     },
-//   });
-
-//   return checkResult;
-// };
-
 // 방장 변경( 방장이 아닌 유저가 퇴장할 경우) db
 exports.updateGameRoom = async (gameId, changeValue, transaction) => {
   console.log("changeValue는", changeValue);
@@ -87,38 +75,6 @@ exports.updateWaitingStatus = async (gameId) => {
   console.log("업데이트결과는", updateResult);
   return updateResult;
 };
-
-// 남은 참가자 조회 db
-// exports.getRestParticipants = async (game, transaction) => {
-//   const currentPlayersResult = await db.PlayerGroup.findAll({
-//     where: {
-//       game_id: game.game_id,
-//     },
-//     include: [
-//       {
-//         model: db.User,
-//         attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
-//         include: [{ model: db.Region, attributes: ["region"] }],
-//       },
-//     ],
-//     raw: false,
-//     transaction,
-//   });
-
-//   return currentPlayersResult;
-// };
-
-// 모델 인스턴스에서 참가자 정보만 map
-// exports.formatParticipantData = (playerInstances) => {
-//   return playerInstances.map((playerInstance) => {
-//     return {
-//       participantId: playerInstance.user.user_id,
-//       participantNick: playerInstance.user.nickname,
-//       participantProfile: playerInstance.user.character,
-//       participantRegion: playerInstance.user.region.region,
-//     };
-//   });
-// };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -420,32 +376,6 @@ exports.setPlayersScore = async (playersInfo, transaction) => {
   });
   // 전체 쿼리 동시에 실행
   await Promise.all(updatePromises);
-};
-
-// 처음 소켓 연결시 db에서 유저 정보 메모리에 저장 (socketUserInfo)
-exports.syncUserInfoFromDB = async (socketId, userId) => {
-  const findResult = await db.User.findOne({
-    where: {
-      user_id: userId,
-    },
-    attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
-    include: [{ model: db.Region, attributes: ["region"] }],
-  });
-
-  if (!findResult) throw new Error("존재하지 않는 유저입니다.");
-
-  const { user_id, nickname, character } = findResult;
-  const { region } = findResult.region;
-  const userInfo = {
-    userId: user_id,
-    nickname,
-    region,
-    character,
-    gameId: null,
-  };
-
-  exports.setPlayerToUsersInfo(socketId, userInfo);
-  console.log("유저 소켓연결후는 ", socketUsersInfo);
 };
 
 // 처음 소켓 연결시 db의 방 정보(is_waiting === true) 메모리에 저장 (socketGameInfo)
