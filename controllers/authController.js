@@ -81,6 +81,7 @@ const authController = {
           params: {
             code,
             client_id: process.env.KAKAO_REST_API_KEY,
+            client_secret: process.env.KAKAO_CLIENT_SECRET,
             redirect_uri: process.env.KAKAO_REDIRECT_URI,
             grant_type: "authorization_code",
           },
@@ -114,9 +115,9 @@ const authController = {
             social_id: kakaoId,
             social_type: "KAKAO",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);
@@ -158,26 +159,7 @@ const authController = {
   // 구글 로그인
   googleLogin: async (req, res) => {
     try {
-      const { code } = req.body;
-
-      if (!code) {
-        return signInFailed(res, "인가 코드(code)가 없습니다.");
-      }
-
-      const tokenResponse = await axios.post(
-        "https://oauth2.googleapis.com/token",
-        null,
-        {
-          params: {
-            code,
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            grant_type: "authorization_code",
-          },
-        },
-      );
-
-      const accessToken = tokenResponse.data.access_token;
-      console.log("✅ 구글 Access Token: ", accessToken);
+      const { accessToken } = req.body;
 
       const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -202,9 +184,9 @@ const authController = {
             social_id: googleId,
             social_type: "GOOGLE",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);
@@ -292,9 +274,9 @@ const authController = {
             social_id: naverId,
             social_type: "NAVER",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);

@@ -89,6 +89,16 @@ schemas:
     example:
       code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
 
+  GoogleLoginRequest:
+  type: object
+  required:
+    - accessToken
+  properties:
+    accessToken:
+      type: string
+  example:
+    code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
+
   TokenResponse:
     type: object
     properties:
@@ -130,6 +140,18 @@ schemas:
       message: "Success"
 
   # 프로필
+  NicknameResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
   ProfileRequest:
     type: object
     required:
