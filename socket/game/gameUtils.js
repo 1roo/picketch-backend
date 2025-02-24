@@ -108,7 +108,7 @@ exports.joinGameToUsersInfo = (socketId, gameId) => {
 exports.leaveGameFromUsersInfo = (socketId) => {
   socketUsersInfo[socketId] = {
     ...socketUsersInfo[socketId],
-    game: null,
+    gameId: null,
   };
 };
 
@@ -152,23 +152,28 @@ exports.getGameInfoByGameId = (gameId) => {
   return gameInfo;
 };
 
+// 게임 정보 생성 (socketGamesInfo)
+exports.createGameInfoFromDB = (gameId, game) => {
+  socketGamesInfo[gameId] = {
+    name: game.name,
+    currentTurnUserId: null,
+    currentRound: null,
+    maxRound: game.round,
+    isLock: game.is_lock,
+    pw: game.pw,
+    manager: game.manager,
+    isWaiting: game.is_waiting,
+    keywords: null,
+    currentRoundKeyword: null,
+    isAnswerFound: null,
+    isNextRoundSettled: null,
+    isGameEnd: null,
+    players: [],
+  };
+  if (!socketGamesInfo[gameId]) throw new Error("gameInfo가 생성되지 않았습니다.");
+};
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
 exports.addPlayerToGamesInfo = (socketId, gameId) => {
-  // 방만들때 메모리에 올라가지 않아서 임시로 객체를 만들어주기@!#!@#!@#!@#!@#!
-  if (!socketGamesInfo[gameId]) {
-    socketGamesInfo[gameId] = {
-      currentTurnUserId: 1,
-      currentRound: 1,
-      isAnswerFound: false,
-      maxRound: null,
-      isLock: false,
-      pw: "1234",
-      manager: 1,
-      isWaiting: true,
-      keyword: "사과",
-      players: [],
-    };
-  }
   const userInfo = exports.getPlayerFromUsersInfo(socketId);
   const gameInfo = exports.getGameInfoByGameId(gameId);
   const isExist = gameInfo.players.some((player) => player.userId === userInfo.userId);

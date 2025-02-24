@@ -19,6 +19,7 @@ const {
   leaveGameFromUsersInfo,
   getUpdateGameInfoRes,
   getGameRoom,
+  createGameInfoFromDB,
 } = require("./gameUtils");
 
 // 게임 참가 처리 로직
@@ -30,46 +31,31 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   const transaction = await db.sequelize.transaction();
   try {
     const userInfo = getPlayerFromUsersInfo(socket.id);
-    const game = await getGameRoom(gameId, true, transaction);
-    console.log("메모리에 존재하는방여부", socketGamesInfo[gameId]);
-    console.log("메모리에 존재하는방여부", socketGamesInfo[gameId]);
-    console.log("db조회 결과 불리언", Boolean(game));
-    console.log("db조회 결과 불리언", game);
-    if (game && !socketGamesInfo[gameId]) {
-      console.log("db에 존재하지만 gameInfo 메모리내에 없는 경우 추가");
-      // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
-      socketGamesInfo[gameId] = {
-        name: game.name,
-        currentTurnUserId: null,
-        currentRound: null,
-        maxRound: game.round,
-        isLock: game.is_lock,
-        pw: game.pw,
-        manager: game.manager,
-        isWaiting: game.is_waiting,
-        keywords: null,
-        currentRoundKeyword: null,
-        isAnswerFound: null,
-        isNextRoundSettled: null,
-        isGameEnd: null,
-        // 참여했던 유저들 그대로 포함시킬지?
-        players: [],
-      };
-    }
-    console.log("참여후 방만들어지고 게임정보", socketGamesInfo);
-
+    if (userInfo.gameId) throw new Error(`이미 ${userInfo.gameId}방에 참여중입니다.`);
     // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
+    const game = await getGameRoom(gameId, true, transaction);
+    if (!game) throw new Error("db에 존재하지 않는 방입니다.");
+    if (game && !socketGamesInfo[gameId] && userInfo.userId === game.manager) {
+      // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
+      createGameInfoFromDB(gameId, game);
+    }
 
     const gameInfo = getGameInfoByGameId(gameId);
     // 참가 가능 방 여부 확인
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
     // 비밀번호 유효성 검증
-    if (gameInfo.isLock && typeof inputPw !== "number")
+    if (gameInfo.isLock && !inputPw && userInfo.userId !== game.manager)
+      throw new Error("비밀번호값이 없습니다.");
+    if (
+      gameInfo.isLock &&
+      typeof inputPw !== "number" &&
+      userInfo.userId !== game.manager
+    )
       throw new Error("유효한 pw 정보가 없습니다.");
-    if (gameInfo.isLock && inputPw !== gameInfo.pw) {
+    if (gameInfo.isLock && inputPw !== gameInfo.pw && userInfo.userId !== game.manager) {
       throw new Error("비밀번호가 일치하지 않습니다.");
     }
 
@@ -96,7 +82,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     const joinGameRes = getJoinRes(socket.id, "게임방 입장");
     // updateParticipants 성공 응답객체
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
-
+    console.log("게임입장처리후에 전체 게임정보", socketGamesInfo);
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
     io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
