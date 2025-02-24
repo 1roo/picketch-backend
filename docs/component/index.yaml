@@ -68,6 +68,8 @@ schemas:
         enum: [SU]
       message:
         type: string
+      userId:
+        type: integer
       accessToken:
         type: string
       expirationTime:
@@ -75,6 +77,7 @@ schemas:
     example:
       code: "SU"
       message: "Success"
+      userId: 1
       accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       expirationTime: 3600
 
@@ -107,6 +110,8 @@ schemas:
         enum: [SU]
       message:
         type: string
+      userId:
+        type: integer
       accessToken:
         type: string
       refreshToken:
@@ -120,6 +125,7 @@ schemas:
     example:
       code: "SU"
       message: "Success"
+      userId: 1
       accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       hasProfile: true

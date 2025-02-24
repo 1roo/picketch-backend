@@ -54,6 +54,7 @@ const authController = {
       );
 
       success(res, "Success", {
+        userId: user.user_id,
         accessToken,
         expirationTime: 3600,
       });
@@ -143,6 +144,7 @@ const authController = {
       );
 
       success(res, "Success", {
+        userId: user.user_id,
         ...tokens,
         hasProfile,
         tokenType: "Bearer",
@@ -213,6 +215,7 @@ const authController = {
       );
 
       success(res, "Success", {
+        userId: user.user_id,
         ...tokens,
         hasProfile,
         tokenType: "Bearer",
@@ -298,6 +301,7 @@ const authController = {
       const hasProfile = !!(user.nickname && user.character && user.region_id);
 
       success(res, "Success", {
+        userId: user.user_id,
         ...tokens,
         hasProfile,
         tokenType: "Bearer",
