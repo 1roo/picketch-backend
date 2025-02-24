@@ -46,12 +46,15 @@ exports.gameChatHandler = (io, socket, payload) => {
       gameInfo.currentTurnUserId !== userInfo.userId &&
       !gameInfo.isAnswerFound
     ) {
-      console.log("현재게임정보", socketGamesInfo[gameId]);
+      console.log("현재게임정보", socketGamesInfo[userInfo.gameId]);
       console.log("채팅치는 사람 id와 메세지", userInfo.userId, message);
       console.log("현재 턴", gameInfo.currentRound);
-      console.log("현재 턴의 정답", socketGamesInfo[gameId].keywords);
-      console.log("현재 턴의 키워드", socketGamesInfo[gameId].currentRoundKeyword);
-      const isAnswer = message === socketGamesInfo[gameId].currentRoundKeyword;
+      console.log("현재 턴의 정답", socketGamesInfo[userInfo.gameId].keywords);
+      console.log(
+        "현재 턴의 키워드",
+        socketGamesInfo[userInfo.gameId].currentRoundKeyword,
+      );
+      const isAnswer = message === socketGamesInfo[userInfo.gameId].currentRoundKeyword;
       console.log("보낸 메세지가 정답인가요?", isAnswer);
       if (isAnswer) {
         // 정답자는 gameInfo에 점수 업데이트

@@ -27,7 +27,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
-    // const userInfo = getPlayerFromUsersInfo(socket.id);
+    const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(gameId);
     // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
@@ -53,7 +53,6 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     }
 
     // 입장 처리 db
-    const userInfo = getPlayerFromUsersInfo(socket.id);
     await addUserToGameRoom(gameId, userInfo.userId, transaction);
     await transaction.commit();
     // 입장 처리 socketGamesInfo
