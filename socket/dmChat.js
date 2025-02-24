@@ -1,10 +1,10 @@
 const { where, Op } = require("sequelize");
 const db = require("../models");
-const { validationErrorWithMessage } = require("../utils/common");
+const { validationErrorWithMessage, databaseError } = require("../utils/common");
+const { response } = require("express");
 
 let chatUserInfo = {};
-const chatUserInfos = [chatUserInfo];
-exports.dmChatSocket = (socket) => {
+exports.dmChatSocket = (io, socket) => {
   const userId = Number(socket.handshake.query.userId);
   if (!userId) {
     console.log("userId 유효하지 않음");
@@ -13,8 +13,19 @@ exports.dmChatSocket = (socket) => {
   console.log(`${socket.id}인 ${userId} dmChat socket 접속`);
   // 채팅방 접속
   let dmRoomId;
-  socket.on("joinDm", async (id) => {
-    const friendId = Number(id);
+  socket.on("joinDm", async (data) => {
+    const friendInfo = await db.User.findOne({
+      where: { nickname: data.friendNick },
+      attributes: ["user_id", "nickname"],
+    });
+    const friendId = friendInfo.user_id;
+    if (userId === friendId) {
+      socket.emit("error", "자기 자신에게 메세지 불가");
+      console.log("자기 자신에게 메세지 불가");
+      return;
+    }
+
+    // user 정보 조회
     const userInfo = await db.User.findOne({
       where: { user_id: userId },
       attributes: ["user_id", "nickname"],
@@ -24,13 +35,9 @@ exports.dmChatSocket = (socket) => {
       console.log("userInfo 없음");
       return;
     }
-    chatUserInfo[socket.id] = { userId, nickname: userInfo.nickname };
-    if (userId === friendId) {
-      socket.emit("error", "자기 자신에게 메세지 불가");
-      console.log("자기 자신에게 메세지 불가");
-      return;
-    }
+    chatUserInfo[userId] = { socketId: socket.id, nickname: userInfo.nickname };
 
+    // 기존 채팅방 DB 확인
     let dmChatRoom = await db.Dm.findOne({
       where: {
         [Op.or]: [
@@ -40,52 +47,83 @@ exports.dmChatSocket = (socket) => {
       },
       default: { user_id: userId, friend_id: friendId },
     });
+    // 없는 경우 채팅방 DB 생성
     if (!dmChatRoom) {
       dmChatRoom = await db.Dm.create({
         user_id: userId,
         friend_id: friendId,
       });
+      prevChat = null;
     }
     dmRoomId = Number(dmChatRoom.dm_id);
-    console.log(`${dmRoomId}방입니다.`);
+    // 기존 채팅방 대화 내용 불러오기
+    const prevChat = await db.DmChat.findAll({
+      where: { dm_id: dmRoomId },
+      attributes: ["message", "sender_id"],
+    });
+
+    // DM 방 입장
+    socket.join(dmRoomId);
+    console.log(`${chatUserInfo[userId].nickname}님이 ${dmRoomId}번 방에 join했습니다`);
+    // 방 정보 업데이트
     const dmData = {
       dmRoomId,
-      chatUserInfos,
+      chatUserInfo,
+      prevChat,
     };
     console.log(dmData);
-    socket.emit("updateDmRoomInfo", dmData);
+    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
   });
 
-  // "chatUserInfos": [
-  //           {
-  //                "R2kOT9_hS3csFhG3AAAB": {
-  //                     "userId": 1,
-  //                     "nickname": "훈이"
-  //                },
-  //                "yteC2wDcmV2iRjUUAAAD": {
-  //                     "userId": 2,
-  //                     "nickname": "짱구"
-  //                }
-  //           }
-  //      ]
+  // 채팅 받기
+  socket.on("sendDm", async (data) => {
+    const senderInfo = await db.User.findOne({
+      where: { nickname: data.senderNick },
+      attributes: ["user_id", "nickname"],
+    });
+    if (!senderInfo) return validationErrorWithMessage(res, "sender 정보 없음");
+    const senderId = senderInfo.user_id;
+    // receiverId 찾기
+    const dmRoomUsers = await db.Dm.findOne({ where: dmRoomId });
+    const receiverId =
+      dmRoomUsers.user_id === senderId ? dmRoomUsers.friend_id : dmRoomUsers.user_id;
 
-  // 채팅 전달
-  socket.on("sendDm", (data) => {
-    // socket.join(data.dmRoomID)
-    console.log(data);
+    console.log("senderId : ", senderId, "receiverId : ", receiverId);
+
     const msgData = {
-      from: data.senderId,
+      dmRoomId,
+      from: data.senderNick,
       message: data.message,
     };
-    //왜 안떠
     console.log(msgData);
-    socket.emit("receiveDm", msgData);
+    // 메세지 db 저장
+    const saveMsg = await db.DmChat.create({
+      dm_id: dmRoomId,
+      message: data.message,
+      sender_id: senderId,
+    });
+    if (!saveMsg) return databaseError(res);
+    console.log(chatUserInfo);
+    // 수신자 채팅방 미접속
+    if (!chatUserInfo[receiverId]) {
+      // Notification DB 저장
+      const notification = await db.Notification.create({
+        user_id: receiverId,
+        from_user_id: senderId,
+        notification_type: "DM_RECEIVED",
+        response_status: "PENDING",
+        content: `${chatUserInfo[senderId].nickname}님이 메세지를 보냈습니다.`,
+      });
+      console.log(notification);
+    }
+    // dmRoomId 내 유저에게 채팅 전달
+    io.of("/dmChat").to(dmRoomId).emit("receiveDm", msgData);
   });
-  //   socket.emit("receiveDm");
   //   socket.emit("exitDm");
 
   socket.on("disconnect", () => {
     console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
-    delete chatUserInfos;
+    delete chatUserInfo[userId];
+    // io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
   });
 };
