@@ -1,4 +1,8 @@
 const db = require("../models");
+const {
+  getGameInfoByGameId,
+  getGameIdFromGameInfo,
+} = require("../socket/game/gameUtils");
 
 exports.authSocketMiddleware = async (socket, next) => {
   try {
@@ -17,14 +21,17 @@ exports.authSocketMiddleware = async (socket, next) => {
     });
 
     if (!findResult) throw new Error("존재하지 않는 유저입니다.");
+
     const { user_id, nickname, character } = findResult;
     const { region } = findResult.region;
+    const gameId = getGameIdFromGameInfo(user_id);
+    console.log("찾은 gameId는", gameId);
     socket.userInfo = {
       userId: user_id,
       nickname,
       region,
       character,
-      gameId: null,
+      gameId: gameId,
     };
     return next();
   } catch (err) {

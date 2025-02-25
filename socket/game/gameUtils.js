@@ -239,6 +239,23 @@ exports.isUserInGame = (gameId, userId) => {
   return gameInfo.players.some((player) => player.userId === userId);
 };
 
+// 유저 참가중인 게임방의 gameId 조회
+exports.getGameIdFromGameInfo = (userId) => {
+  for (let gameId in socketGamesInfo) {
+    const game = socketGamesInfo[gameId];
+
+    const isUserExist = game.players.some((player) => {
+      return player.userId === userId;
+    });
+    console.log("유저가 있나요?", isUserExist);
+    if (isUserExist) {
+      return Number(gameId);
+    } else {
+      return null;
+    }
+  }
+};
+
 // 게임 정보에서 전체 유저가 ready인지 확인 (socketGamesInfo)
 exports.checkAllReady = (gameId) => {
   const participant = exports.getParticipants(gameId);
@@ -416,6 +433,60 @@ exports.syncGameInfoFromDB = async () => {
 
   console.log("찾은 게임방 결과", gameFindResult.length);
   console.log("gameInfo 조회", socketGamesInfo);
+};
+
+// db에 game, player_group 테이블 정보 gameInfo로 복구
+exports.syncGameInfoWithPlayersFromDB = async () => {
+  const gameFindResult = await db.Game.findAll({
+    where: {
+      is_waiting: 1,
+    },
+    include: [
+      {
+        model: db.PlayerGroup,
+        include: [{ model: db.User, include: [{ model: db.Region }] }],
+      },
+    ],
+  });
+  const gameInfo = gameFindResult.map((gameResult) => {
+    return gameResult.get({ plain: true });
+  });
+  console.log("한번에 가져오기", gameInfo[0].playerGroups[0]);
+
+  // 게임 방 추가하기 (socketGamesInfo)
+  gameInfo.forEach((game) => {
+    const { game_id, name, manager, is_lock, pw, round, is_waiting } = game;
+    const players = game.playerGroups.map((player) => {
+      return {
+        userId: player.user.user_id,
+        nickname: player.user.nickname,
+        score: 0,
+        ready: manager === player.user.userId ? true : false,
+        character: player.user.character,
+        region: player.user.region.region,
+      };
+    });
+    // 게임방에 참여 유저 추가하기 (socketGameInfo)
+    socketGamesInfo[game_id] = {
+      name,
+      currentTurnUserId: null,
+      currentRound: null,
+      maxRound: round,
+      isLock: is_lock,
+      pw,
+      manager,
+      isWaiting: is_waiting,
+      keywords: null,
+      currentRoundKeyword: null,
+      isAnswerFound: null,
+      isNextRoundSettled: null,
+      isGameEnd: null,
+      players: [...players],
+    };
+  });
+  console.log("찾은 게임방 결과", gameFindResult.length);
+  console.log("gameInfo 조회", socketGamesInfo);
+  console.log("gameInfo 조회", socketGamesInfo[1].players);
 };
 
 // 서버 재실행되는 경우 is_waiting===true 대기중인 방을 완료처리
