@@ -30,11 +30,27 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
-    const userInfo = getPlayerFromUsersInfo(socket.id);
-    if (userInfo.gameId) throw new Error(`이미 ${userInfo.gameId}번 방에 참여중입니다.`);
+    // if (userInfo.gameId) throw new Error(`이미 ${userInfo.gameId}번 방에 참여중입니다.`);
     // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
+    const userInfo = getPlayerFromUsersInfo(socket.id);
+
+    // 재연결시 참여방이 있는 경우
+    if (userInfo.gameId) {
+      console.log("기존 참여방", socket.rooms);
+      console.log("기존 참여방 있음");
+      addPlayerToGamesInfo(socket.id, userInfo.gameId);
+      socket.join(userInfo.gameId);
+      // joinGame 성공 응답객체
+      const joinGameRes = getJoinRes(socket.id, "게임방 입장");
+      // updateParticipants 성공 응답객체
+      const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+      socket.emit("joinGame", joinGameRes);
+      io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
+      return;
+    }
+
     const game = await getGameRoom(gameId, true, transaction);
     if (!game) throw new Error("db에 존재하지 않는 방입니다.");
     if (game && !socketGamesInfo[gameId] && userInfo.userId === game.manager) {
@@ -175,8 +191,11 @@ exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
 exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
   const transaction = await db.sequelize.transaction();
   try {
+    console.log("퇴장 이벤트 발생");
     const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(userInfo.gameId);
+    console.log("유저정보", userInfo);
+    console.log("게임정보", gameInfo);
     // 참가중인 방인지 확인
     if (!userInfo.gameId) throw new Error("참가중인 방이 없습니다.");
     // 퇴장 가능 방 여부 확인

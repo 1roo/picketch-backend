@@ -17,7 +17,17 @@ exports.socketUsersInfo = {};
 //     isAnswerFound : false, // 현재 라운드 정답 제출 여부
 //     isNextRoundSettled : true, // 다음 라운드 설정값 세팅 여부
 //     isGameEnd : false, // 게임종료 처리 여부
-//     players : [
+//     players : [ // 현재 참가중인 유저들
+//       {
+//         userId : 1,
+//         nickname : "고기고기"
+//         score : 0,
+//         ready : false,
+//         character : "디폴트",
+//         region : "동작구"
+//       }
+//     ]
+//     beforePlayers : [ // 서버 재실행전 만들어졌던 방에 참가한 유저들
 //       {
 //         userId : 1,
 //         nickname : "고기고기"

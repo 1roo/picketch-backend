@@ -85,6 +85,7 @@ exports.getPlayerFromUsersInfo = (socketId) => {
     throw new Error("조회하려는 socketId가 없습니다.");
   }
   const userInfo = socketUsersInfo[socketId];
+  console.log("유저정보는 ", userInfo);
   if (!userInfo) throw new Error("userInfo에서 해당 유저를 찾을 수 없습니다.");
   return {
     userId: userInfo.userId,
@@ -133,7 +134,6 @@ exports.setPlayerToUsersInfo = (socket) => {
   if (socket.userInfo.gameId !== undefined) {
     socketUsersInfo[socket.id].gameId = socket.userInfo.gameId;
   }
-  socket.join(socket.userInfo.gameId);
   console.log("연결 소켓유저 userInfo에 저장후 ", socketUsersInfo);
 };
 
@@ -245,7 +245,7 @@ exports.getGameIdFromGameInfo = (userId) => {
   for (let gameId in socketGamesInfo) {
     const game = socketGamesInfo[gameId];
 
-    const isUserExist = game.players.some((player) => {
+    const isUserExist = game.beforePlayers.some((player) => {
       return player.userId === userId;
     });
     console.log("유저가 있나요?", isUserExist);
@@ -449,6 +449,10 @@ exports.syncGameInfoWithPlayersFromDB = async () => {
       },
     ],
   });
+  if (gameFindResult.length === 0) {
+    console.log("이전에 생성된 방이 없습니다.");
+    return;
+  }
   const gameInfo = gameFindResult.map((gameResult) => {
     return gameResult.get({ plain: true });
   });
@@ -483,7 +487,8 @@ exports.syncGameInfoWithPlayersFromDB = async () => {
       isAnswerFound: null,
       isNextRoundSettled: null,
       isGameEnd: null,
-      players: [...players],
+      players: [],
+      beforePlayers: [...players],
     };
   });
   console.log("찾은 게임방 결과", gameFindResult.length);
