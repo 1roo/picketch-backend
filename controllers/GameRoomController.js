@@ -37,10 +37,7 @@ exports.addGameRoom = async (req, res) => {
   try {
     // const user = req.user.user_id;
     const user = 1;
-
     const { roomName, round, isLock, pw } = req.body;
-    console.log(roomName, round, isLock, pw);
-    console.log(isLock === true);
     // 유효성 검사
     if (!roomName || !round || isLock === null)
       return validationErrorWithMessage(res, "필수 값 누락");
@@ -52,7 +49,7 @@ exports.addGameRoom = async (req, res) => {
     });
     if (duplicateRoomName) return validationErrorWithMessage(res, "방이름 중복");
 
-    const createGame = await db.Game.create({
+    const newGame = await db.Game.create({
       name: roomName,
       manager: user,
       round,
@@ -60,10 +57,10 @@ exports.addGameRoom = async (req, res) => {
       pw: isLock ? pw : null,
     });
     await db.PlayerGroup.create({
-      game_id: createGame.game_id,
+      game_id: newGame.game_id,
       user_id: user,
     });
-    success(res);
+    success(res, "Success", { gameId: newGame.game_id });
   } catch (err) {
     databaseError(res, err);
   }
