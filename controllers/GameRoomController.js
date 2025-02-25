@@ -49,7 +49,7 @@ exports.addGameRoom = async (req, res) => {
     });
     if (duplicateRoomName) return validationErrorWithMessage(res, "방이름 중복");
 
-    const newGame = await db.Game.create({
+    const createGame = await db.Game.create({
       name: roomName,
       manager: user,
       round,
@@ -57,10 +57,11 @@ exports.addGameRoom = async (req, res) => {
       pw: isLock ? pw : null,
     });
     await db.PlayerGroup.create({
-      game_id: newGame.game_id,
+      game_id: createGame.game_id,
       user_id: user,
     });
-    success(res, "Success", { gameId: newGame.game_id });
+    const newGame = { gameId: createGame.game_id };
+    success(res, "Success", { newGame });
   } catch (err) {
     databaseError(res, err);
   }
