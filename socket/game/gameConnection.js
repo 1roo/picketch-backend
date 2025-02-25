@@ -37,7 +37,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     const userInfo = getPlayerFromUsersInfo(socket.id);
 
     // 재연결시 참여방이 있는 경우
-    if (userInfo.gameId) {
+    if (userInfo.gameId === gameId) {
       console.log("기존 참여방", socket.rooms);
       console.log("기존 참여방 있음");
       addPlayerToGamesInfo(socket.id, userInfo.gameId);
@@ -50,7 +50,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
       io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
       return;
     }
-
+    if (userInfo.gameId) throw new Error(`다른방 ${userInfo.gameId}번에 참여중입니다.`);
     const game = await getGameRoom(gameId, true, transaction);
     if (!game) throw new Error("db에 존재하지 않는 방입니다.");
     if (game && !socketGamesInfo[gameId] && userInfo.userId === game.manager) {
