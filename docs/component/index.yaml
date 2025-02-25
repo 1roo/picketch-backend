@@ -104,7 +104,7 @@ schemas:
       accessToken:
         type: string
     example:
-      code: "ya29.a0AfB_byC-..."
+      accessToken: "ya29.a0AfB_byC-..."
 
   TokenResponse:
     type: object
