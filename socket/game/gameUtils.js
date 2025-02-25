@@ -2,17 +2,17 @@ const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db
-// exports.getGameRoom = async (gameId, is_waiting, transaction) => {
-//   console.log("isActive는", is_waiting);
-//   const game = await db.Game.findOne({
-//     where: {
-//       game_id: gameId,
-//       is_waiting: Number(!is_waiting),
-//     },
-//     transaction,
-//   });
-//   return game;
-// };
+exports.getGameRoom = async (gameId, is_waiting, transaction) => {
+  console.log("isActive는", is_waiting);
+  const game = await db.Game.findOne({
+    where: {
+      game_id: gameId,
+      is_waiting: Number(is_waiting),
+    },
+    transaction,
+  });
+  return game;
+};
 
 // 방장 변경( 방장이 아닌 유저가 퇴장할 경우) db
 exports.updateGameRoom = async (gameId, changeValue, transaction) => {
@@ -300,7 +300,6 @@ exports.toggleReadyGamesInfo = (gameId, userId) => {
       }
       return player;
     });
-    console.log("ready 바뀐 값", changedPlayerInfo);
     gameInfo.players = [...changedPlayerInfo];
   }
 };
@@ -546,11 +545,6 @@ exports.getLeaveRes = (socketId, message) => {
   return exports.successRes(socketId, message);
 };
 
-// readyGame 성공 응답
-exports.getReadyRes = (socketId, message) => {
-  return exports.successRes(socketId, message);
-};
-
 // endGame 성공 응답
 exports.getEndGameRes = (socketId) => {
   if (!socketId) {
@@ -626,6 +620,19 @@ exports.getUpdateGameInfoRes = (socketId) => {
       isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
       players: gameInfo.players || null,
     },
+  };
+};
+
+// readyGame 성공 응답
+exports.getReadyRes = (socketId) => {
+  const userInfo = socketUsersInfo[socketId];
+  const isAllReady = exports.checkAllReady(userInfo.gameId);
+  return {
+    type: "SUCCESS",
+    message: "게임 준비",
+    gameId: userInfo.gameId || null,
+    userId: userInfo.userId || null,
+    data: { isAllReady: isAllReady },
   };
 };
 

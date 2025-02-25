@@ -18,21 +18,51 @@ const {
   joinGameToUsersInfo,
   leaveGameFromUsersInfo,
   getUpdateGameInfoRes,
+  getGameRoom,
 } = require("./gameUtils");
 
 // 게임 참가 처리 로직
 exports.joinGameRoomHandler = async (io, socket, payload) => {
-  const { gameId, inputPw } = payload;
+  const gameId = payload.gameId;
+  const inputPw = Number(payload.inputPw);
 
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
     const userInfo = getPlayerFromUsersInfo(socket.id);
-    const gameInfo = getGameInfoByGameId(gameId);
+    const game = await getGameRoom(gameId, true, transaction);
+    console.log("메모리에 존재하는방여부", socketGamesInfo[gameId]);
+    console.log("메모리에 존재하는방여부", socketGamesInfo[gameId]);
+    console.log("db조회 결과 불리언", Boolean(game));
+    console.log("db조회 결과 불리언", game);
+    if (game && !socketGamesInfo[gameId]) {
+      console.log("db에 존재하지만 gameInfo 메모리내에 없는 경우 추가");
+      // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
+      socketGamesInfo[gameId] = {
+        name: game.name,
+        currentTurnUserId: null,
+        currentRound: null,
+        maxRound: game.round,
+        isLock: game.is_lock,
+        pw: game.pw,
+        manager: game.manager,
+        isWaiting: game.is_waiting,
+        keywords: null,
+        currentRoundKeyword: null,
+        isAnswerFound: null,
+        isNextRoundSettled: null,
+        isGameEnd: null,
+        // 참여했던 유저들 그대로 포함시킬지?
+        players: [],
+      };
+    }
+    console.log("참여후 방만들어지고 게임정보", socketGamesInfo);
+
     // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
 
+    const gameInfo = getGameInfoByGameId(gameId);
     // 참가 가능 방 여부 확인
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
