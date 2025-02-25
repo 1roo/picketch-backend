@@ -113,26 +113,27 @@ exports.leaveGameFromUsersInfo = (socketId) => {
 };
 
 // 유저 정보에 소켓 연결유저 메모리에 저장 (socketUserInfo)
-exports.setPlayerToUsersInfo = (socketId, userInfo) => {
-  if (!socketId) throw new Error("연결된 소켓 id 값이 없습니다.");
-  if (!socketUsersInfo[socketId]) {
-    socketUsersInfo[socketId] = {};
+exports.setPlayerToUsersInfo = (socket) => {
+  if (!socket.id) throw new Error("연결된 소켓 id 값이 없습니다.");
+  if (!socketUsersInfo[socket.id]) {
+    socketUsersInfo[socket.id] = {};
   }
-  if (userInfo.userId !== undefined) {
-    socketUsersInfo[socketId].userId = userInfo.userId;
+  if (socket.userInfo.userId !== undefined) {
+    socketUsersInfo[socket.id].userId = socket.userInfo.userId;
   }
-  if (userInfo.nickname !== undefined) {
-    socketUsersInfo[socketId].nickname = userInfo.nickname;
+  if (socket.userInfo.nickname !== undefined) {
+    socketUsersInfo[socket.id].nickname = socket.userInfo.nickname;
   }
-  if (userInfo.region !== undefined) {
-    socketUsersInfo[socketId].region = userInfo.region;
+  if (socket.userInfo.region !== undefined) {
+    socketUsersInfo[socket.id].region = socket.userInfo.region;
   }
-  if (userInfo.character !== undefined) {
-    socketUsersInfo[socketId].character = userInfo.character;
+  if (socket.userInfo.character !== undefined) {
+    socketUsersInfo[socket.id].character = socket.userInfo.character;
   }
-  if (userInfo.gameId !== undefined) {
-    socketUsersInfo[socketId].gameId = userInfo.gameId;
+  if (socket.userInfo.gameId !== undefined) {
+    socketUsersInfo[socket.id].gameId = socket.userInfo.gameId;
   }
+  socket.join(socket.userInfo.gameId);
   console.log("연결 소켓유저 userInfo에 저장후 ", socketUsersInfo);
 };
 
@@ -456,12 +457,13 @@ exports.syncGameInfoWithPlayersFromDB = async () => {
   // 게임 방 추가하기 (socketGamesInfo)
   gameInfo.forEach((game) => {
     const { game_id, name, manager, is_lock, pw, round, is_waiting } = game;
+    console.log("방의 매니저는", manager);
     const players = game.playerGroups.map((player) => {
       return {
         userId: player.user.user_id,
         nickname: player.user.nickname,
         score: 0,
-        ready: manager === player.user.userId ? true : false,
+        ready: manager === player.user.user_id ? true : false,
         character: player.user.character,
         region: player.user.region.region,
       };
