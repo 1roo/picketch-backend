@@ -35,9 +35,10 @@ exports.getGameRoom = async (req, res) => {
 // 게임방 생성
 exports.addGameRoom = async (req, res) => {
   try {
-    // const user = req.user.user_id;
-    const user = 1;
+    const user = req.user.user_id;
+    // const user = 1;
     const { roomName, round, isLock, pw } = req.body;
+    console.log(roomName, round, isLock, pw);
     // 유효성 검사
     if (!roomName || !round || isLock === null)
       return validationErrorWithMessage(res, "필수 값 누락");
@@ -53,15 +54,14 @@ exports.addGameRoom = async (req, res) => {
       name: roomName,
       manager: user,
       round,
-      is_lock: isLock,
+      is_lock: Boolean(isLock),
       pw: isLock ? pw : null,
     });
     await db.PlayerGroup.create({
       game_id: createGame.game_id,
       user_id: user,
     });
-    const newGame = { gameId: createGame.game_id };
-    success(res, "Success", { newGame });
+    success(res, "Success", { gameId: createGame.game_id });
   } catch (err) {
     databaseError(res, err);
   }
