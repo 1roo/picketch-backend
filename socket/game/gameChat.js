@@ -57,6 +57,9 @@ exports.gameChatHandler = (io, socket, payload) => {
       const isAnswer = message === socketGamesInfo[userInfo.gameId].currentRoundKeyword;
       console.log("보낸 메세지가 정답인가요?", isAnswer);
       if (isAnswer) {
+        // 정답 맞추면 해당 라운드 종료 처리 isAnswerFound 값을 true로 변경
+        finishCurrentRound(userInfo.gameId);
+
         // 정답자는 gameInfo에 점수 업데이트
         // 임시 점수 - 추후 상의
         const SCORE = 10;
@@ -65,8 +68,6 @@ exports.gameChatHandler = (io, socket, payload) => {
           gameId: userInfo.gameId,
           score: SCORE,
         });
-        // 정답 맞추면 해당 라운드 종료 처리 isAnswerFound 값을 true로 변경
-        finishCurrentRound(userInfo.gameId);
         console.log("정답시 정답자가 누군지 전체 메세지 보내기");
 
         const updateGameInfoRes = getUpdateGameInfoRes(socket.id);

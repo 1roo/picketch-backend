@@ -140,6 +140,7 @@ exports.setPlayerToUsersInfo = (socket) => {
 // 유저 정보 삭제 (socketUserInfo)
 exports.deletePlayerUsersInfo = (socketId) => {
   delete socketUsersInfo[socketId];
+  console.log("삭제 후 socketUsersInfo", socketUsersInfo);
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,6 +302,7 @@ exports.deletePlayerFromGamesInfo = (socketId) => {
       players: changedPlayer,
     };
   }
+  console.log("gameInfo에서 유저 삭제 후", socketGamesInfo[userInfo.gameId]);
 };
 
 // socketGamesInfo 게임진행정보에서 isGameEnd를 true로 종료처리
@@ -606,7 +608,7 @@ exports.successRes = (socketId, message) => {
     throw new Error("조회하려는 socketId가 없습니다.");
   }
   const userInfo = exports.getPlayerFromUsersInfo(socketId);
-  const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  // const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
   return {
     type: "SUCCESS",
     message: message,

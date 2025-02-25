@@ -1,6 +1,10 @@
 const { drawCanvasHandler, clearCanvasHandler } = require("./gameCanvas");
 const { gameChatHandler } = require("./gameChat");
-const { joinGameRoomHandler, leaveGameRoomHandler } = require("./gameConnection");
+const {
+  joinGameRoomHandler,
+  leaveGameRoomHandler,
+  socketDisconnect,
+} = require("./gameConnection");
 const {
   readyGameHandler,
   startGameHandler,
@@ -49,8 +53,8 @@ exports.gameSocket = async (io, socket) => {
   socket.on("clearCanvas", async (cb) => {
     clearCanvasHandler(io, socket, cb);
   });
-  // 연결 종료
+  // 소켓 연결 종료
   socket.on("disconnect", async () => {
-    await leaveGameRoomHandler(io, socket, false);
+    await socketDisconnect(io, socket);
   });
 };
