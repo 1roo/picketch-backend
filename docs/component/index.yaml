@@ -68,18 +68,22 @@ schemas:
         enum: [SU]
       message:
         type: string
-      userId:
-        type: integer
-      accessToken:
-        type: string
-      expirationTime:
-        type: integer
+      data:
+        type: object
+        properties:
+        userId:
+          type: integer
+        accessToken:
+          type: string
+        expirationTime:
+          type: integer
     example:
       code: "SU"
       message: "Success"
-      userId: 1
-      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      expirationTime: 3600
+      data:
+        userId: 1
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expirationTime: 3600
 
   # 로그인
   SocialLoginRequest:
@@ -93,14 +97,14 @@ schemas:
       code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
 
   GoogleLoginRequest:
-  type: object
-  required:
-    - accessToken
-  properties:
-    accessToken:
-      type: string
-  example:
-    code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
+    type: object
+    required:
+      - accessToken
+    properties:
+      accessToken:
+        type: string
+    example:
+      code: "ya29.a0AfB_byC-..."
 
   TokenResponse:
     type: object
@@ -110,27 +114,31 @@ schemas:
         enum: [SU]
       message:
         type: string
-      userId:
-        type: integer
-      accessToken:
-        type: string
-      refreshToken:
-        type: string
-      hasProfile:
-        type: boolean
-      tokenType:
-        type: string
-      expirationTime:
-        type: integer
+      data:
+        type: object
+        properties:
+          userId:
+            type: integer
+          accessToken:
+            type: string
+          refreshToken:
+            type: string
+          hasProfile:
+            type: boolean
+          tokenType:
+            type: string
+          expirationTime:
+            type: integer
     example:
       code: "SU"
       message: "Success"
-      userId: 1
-      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      hasProfile: true
-      tokenType: "Bearer"
-      expirationTime: 3600
+      data:
+        userId: 1
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        hasProfile: true
+        tokenType: "Bearer"
+        expirationTime: 3600
 
   # 로그아웃
   LogoutResponse:

@@ -54,9 +54,11 @@ const authController = {
       );
 
       success(res, "Success", {
-        userId: user.user_id,
-        accessToken,
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          accessToken,
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
@@ -144,11 +146,13 @@ const authController = {
       );
 
       success(res, "Success", {
-        userId: user.user_id,
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -215,11 +219,13 @@ const authController = {
       );
 
       success(res, "Success", {
-        userId: user.user_id,
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -301,11 +307,13 @@ const authController = {
       const hasProfile = !!(user.nickname && user.character && user.region_id);
 
       success(res, "Success", {
-        userId: user.user_id,
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
