@@ -35,15 +35,14 @@ exports.getGameRoom = async (req, res) => {
 // 게임방 생성
 exports.addGameRoom = async (req, res) => {
   try {
-    // const user = req.user.user_id;
-    const user = 1;
-
-    // is_waiting 빼기 나중에
-    const { roomName, round, isLock, pw, is_waiting } = req.body;
+    const user = req.user.user_id;
+    // const user = 1;
+    const { roomName, round, isLock, pw } = req.body;
+    console.log(roomName, round, isLock, pw);
     // 유효성 검사
-    if (!roomName || !round || !isLock)
+    if (!roomName || !round || isLock === null)
       return validationErrorWithMessage(res, "필수 값 누락");
-    if (isLock && !pw)
+    if (isLock === true && pw === "")
       return validationErrorWithMessage(res, "잠금 설정 시 비밀번호 필수");
 
     const duplicateRoomName = await db.Game.findOne({
@@ -55,15 +54,14 @@ exports.addGameRoom = async (req, res) => {
       name: roomName,
       manager: user,
       round,
-      is_lock: isLock,
+      is_lock: Boolean(isLock),
       pw: isLock ? pw : null,
-      is_waiting: is_waiting ? is_waiting : true,
     });
     await db.PlayerGroup.create({
       game_id: createGame.game_id,
       user_id: user,
     });
-    success(res);
+    success(res, "Success", { gameId: createGame.game_id });
   } catch (err) {
     databaseError(res, err);
   }

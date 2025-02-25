@@ -488,7 +488,6 @@ exports.syncGameInfoWithPlayersFromDB = async () => {
   });
   console.log("찾은 게임방 결과", gameFindResult.length);
   console.log("gameInfo 조회", socketGamesInfo);
-  console.log("gameInfo 조회", socketGamesInfo[1].players);
 };
 
 // 서버 재실행되는 경우 is_waiting===true 대기중인 방을 완료처리
