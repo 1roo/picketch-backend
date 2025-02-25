@@ -95,9 +95,8 @@ exports.dmChatSocket = (io, socket) => {
     if (!senderInfo) return socket.emit("error", { errMsg: "sender 정보 없음" });
     const senderId = senderInfo.user_id;
     // receiverId 찾기
-    const dmRoomUsers = await db.Dm.findOne({ where: dmRoomId });
-    const receiverId =
-      dmRoomUsers.user_id === senderId ? dmRoomUsers.friend_id : dmRoomUsers.user_id;
+    const dmUsers = await db.Dm.findOne({ where: dmRoomId });
+    const receiverId = dmUsers.user_id === senderId ? dmUsers.friend_id : dmUsers.user_id;
 
     console.log("senderId : ", senderId, "receiverId : ", receiverId);
     // 메세지 DB 저장

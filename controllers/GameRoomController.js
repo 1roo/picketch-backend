@@ -38,12 +38,13 @@ exports.addGameRoom = async (req, res) => {
     // const user = req.user.user_id;
     const user = 1;
 
-    // is_waiting 빼기 나중에
-    const { roomName, round, isLock, pw, is_waiting } = req.body;
+    const { roomName, round, isLock, pw } = req.body;
+    console.log(roomName, round, isLock, pw);
+    console.log(isLock === true);
     // 유효성 검사
-    if (!roomName || !round || !isLock)
+    if (!roomName || !round || isLock === null)
       return validationErrorWithMessage(res, "필수 값 누락");
-    if (isLock && !pw)
+    if (isLock === true && pw === "")
       return validationErrorWithMessage(res, "잠금 설정 시 비밀번호 필수");
 
     const duplicateRoomName = await db.Game.findOne({
@@ -57,7 +58,6 @@ exports.addGameRoom = async (req, res) => {
       round,
       is_lock: isLock,
       pw: isLock ? pw : null,
-      is_waiting: is_waiting ? is_waiting : true,
     });
     await db.PlayerGroup.create({
       game_id: createGame.game_id,
