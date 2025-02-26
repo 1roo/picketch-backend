@@ -141,7 +141,6 @@ const authController = {
       const hasProfile = !!(
         user.nickname &&
         !user.nickname.startsWith("T_") &&
-        user.character !== "default_character.png" &&
         user.region_id
       );
 
@@ -214,7 +213,6 @@ const authController = {
       const hasProfile = !!(
         user.nickname &&
         !user.nickname.startsWith("T_") &&
-        user.character !== "default_character.png" &&
         user.region_id
       );
 
@@ -304,7 +302,11 @@ const authController = {
 
       const tokens = generateTokens(user);
 
-      const hasProfile = !!(user.nickname && user.character && user.region_id);
+      const hasProfile = !!(
+        user.nickname &&
+        !user.nickname.startsWith("T_") &&
+        user.region_id
+      );
 
       success(res, "Success", {
         data: {
