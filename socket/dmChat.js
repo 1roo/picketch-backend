@@ -3,6 +3,7 @@ const db = require("../models");
 const { validationErrorWithMessage, databaseError } = require("../utils/common");
 
 let chatUserInfo = {};
+let dmData = {};
 exports.dmChatSocket = (io, socket) => {
   const userId = Number(socket.handshake.query.userId);
   if (!userId) {
@@ -76,7 +77,7 @@ exports.dmChatSocket = (io, socket) => {
       );
     }
     // 방 정보 전달
-    const dmData = {
+    dmData = {
       dmRoomId,
       chatUserInfo,
       prevChat: prevChat ? prevChat : null,
@@ -133,6 +134,6 @@ exports.dmChatSocket = (io, socket) => {
   socket.on("disconnect", () => {
     console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
     delete chatUserInfo[userId];
-    // io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
   });
 };
