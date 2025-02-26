@@ -716,12 +716,14 @@ exports.getUpdateGameInfoRes = (socketId) => {
 // readyGame 성공 응답
 exports.getReadyRes = (socketId) => {
   const userInfo = socketUsersInfo[socketId];
+  const gameInfo = socketGamesInfo[userInfo.name];
   const isAllReady = exports.checkAllReady(userInfo.gameId);
   return {
     type: "SUCCESS",
     message: "게임 준비",
     gameId: userInfo.gameId || null,
     userId: userInfo.userId || null,
+    gameName: gameInfo.name || null,
     data: { isAllReady: isAllReady },
   };
 };
