@@ -70,3 +70,9 @@ VALUES
 (2,8);
 (2,6),
 (2,7);
+
+INSERT INTO friend (user_id,friend_id,friend_nickname)
+VALUES
+(10,1,"훈이"),
+(10,2,"짱구"),
+(10,2,"맹구");

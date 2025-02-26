@@ -26,6 +26,7 @@ function socketHandler(server, redis) {
   const friendStatus = io.of("/friendStatus");
 
   syncGameInfoWithPlayersFromDB();
+
   const namespaces = [notifications, friendStatus, game, dmChat];
   namespaces.forEach(namespace => namespace.use(authSocketMiddleware));
 

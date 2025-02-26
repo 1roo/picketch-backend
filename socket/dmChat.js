@@ -14,10 +14,10 @@ exports.dmChatSocket = (io, socket) => {
   console.log(`${socket.id}인 ${userId} dmChat socket 접속`);
   // 채팅방 접속
   let dmRoomId;
-  socket.on("joinDm", async (data) => {
+  socket.on("joinDm", async (friendNick) => {
     // friendId 조회
     const friendInfo = await db.User.findOne({
-      where: { nickname: data.friendNick },
+      where: { nickname: friendNick },
       attributes: ["user_id", "nickname"],
     });
     const friendId = friendInfo.user_id;
@@ -54,7 +54,6 @@ exports.dmChatSocket = (io, socket) => {
         user_id: userId,
         friend_id: friendId,
       });
-      prevChat = null;
     }
     dmRoomId = Number(dmChatRoom.dm_id);
     const prevChat = await db.DmChat.findAll({
@@ -89,6 +88,7 @@ exports.dmChatSocket = (io, socket) => {
   // 채팅 받기
   socket.on("sendDm", async (data) => {
     // sender 정보 조회
+    console.log(data);
     const senderInfo = await db.User.findOne({
       where: { nickname: data.senderNick },
       attributes: ["user_id", "nickname"],
@@ -131,9 +131,11 @@ exports.dmChatSocket = (io, socket) => {
     console.log(msgData);
     io.of("/dmChat").to(dmRoomId).emit("receiveDm", msgData);
   });
-  socket.on("disconnect", () => {
-    console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
-    delete chatUserInfo[userId];
-    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
-  });
+  socket.on("exitDm", (freindNick) =>
+    socket.on("disconnect", () => {
+      console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
+      delete chatUserInfo[userId];
+      io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    }),
+  );
 };
