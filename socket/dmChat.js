@@ -14,10 +14,10 @@ exports.dmChatSocket = (io, socket) => {
   console.log(`${socket.id}인 ${userId} dmChat socket 접속`);
   // 채팅방 접속
   let dmRoomId;
-  socket.on("joinDm", async (friendNick) => {
+  socket.on("joinDm", async (nickname) => {
     // friendId 조회
     const friendInfo = await db.User.findOne({
-      where: { nickname: friendNick },
+      where: { nickname: nickname },
       attributes: ["user_id", "nickname"],
     });
     const friendId = friendInfo.user_id;
@@ -58,7 +58,7 @@ exports.dmChatSocket = (io, socket) => {
     dmRoomId = Number(dmChatRoom.dm_id);
     const prevChat = await db.DmChat.findAll({
       where: { dm_id: dmRoomId },
-      attributes: ["message", "sender_id"],
+      attributes: ["message", "sender_id", "timestamp"],
     });
     // DM 방 입장
     socket.join(dmRoomId);
@@ -88,7 +88,6 @@ exports.dmChatSocket = (io, socket) => {
   // 채팅 받기
   socket.on("sendDm", async (data) => {
     // sender 정보 조회
-    console.log(data);
     const senderInfo = await db.User.findOne({
       where: { nickname: data.senderNick },
       attributes: ["user_id", "nickname"],
@@ -106,6 +105,7 @@ exports.dmChatSocket = (io, socket) => {
       message: data.message,
       sender_id: senderId,
       is_read: chatUserInfo[receiverId] ? true : false,
+      timestamp: data.timestamp,
     });
     if (!saveMsg) return socket.emit("error", { errMsg: "Database Error" });
     console.log(chatUserInfo);
@@ -127,15 +127,19 @@ exports.dmChatSocket = (io, socket) => {
       dmRoomId,
       from: data.senderNick,
       message: data.message,
+      timestamp: data.timestamp,
     };
     console.log(msgData);
     io.of("/dmChat").to(dmRoomId).emit("receiveDm", msgData);
   });
-  socket.on("exitDm", (freindNick) =>
-    socket.on("disconnect", () => {
-      console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
-      delete chatUserInfo[userId];
-      io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
-    }),
-  );
+  socket.on("exitDm", () => {
+    console.log(`${socket.id}인 ${userId}님 ${dmRoomId}방 퇴장`);
+    socket.leave(dmRoomId);
+    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+  });
+  socket.on("disconnect", () => {
+    console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
+    delete chatUserInfo[userId];
+    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+  });
 };
