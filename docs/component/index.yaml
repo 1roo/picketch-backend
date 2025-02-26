@@ -433,6 +433,10 @@ schemas:
               type: integer
             roomName:
               type: string
+            is_lock:
+              type: boolean
+            playerCount:
+              type: integer
     example:
       {
         "code": "SU",
@@ -441,10 +445,30 @@ schemas:
           {
             "rooms":
               [
-                { "room_id": 1, "roomName": "1반 드루와", "is_lock": "true" },
-                { "room_id": 3, "roomName": "나보다 잘하는 사람?", "is_lock": "false" },
-                { "room_id": 5, "roomName": "맞짱ㄱ", "is_lock": "true" },
-                { "room_id": 9, "roomName": "같이 해요~", "is_lock": "true" },
+                {
+                  "room_id": 1,
+                  "roomName": "1반 드루와",
+                  "is_lock": "true",
+                  "playerCount": 2,
+                },
+                {
+                  "room_id": 3,
+                  "roomName": "나보다 잘하는 사람?",
+                  "is_lock": "false",
+                  "playerCount": 3,
+                },
+                {
+                  "room_id": 5,
+                  "roomName": "맞짱ㄱ",
+                  "is_lock": "true",
+                  "playerCount": 5,
+                },
+                {
+                  "room_id": 9,
+                  "roomName": "같이 해요~",
+                  "is_lock": "true",
+                  "playerCount": 7,
+                },
               ],
           },
       }

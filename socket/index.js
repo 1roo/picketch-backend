@@ -16,6 +16,7 @@ function socketHandler(server) {
 
   syncGameInfoWithPlayersFromDB();
   game.use(authSocketMiddleware);
+  dmChat.use(authSocketMiddleware);
 
   // game
   game.on("connection", (socket) => gameSocket(io, socket));
