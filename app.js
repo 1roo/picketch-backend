@@ -54,7 +54,6 @@ function loadSwaggerFiles() {
     },
     paths: {
       ...loadSwaggerFile("./docs/paths/auth.yaml"),
-      ...loadSwaggerFile("./docs/paths/game.yaml"),
       ...loadSwaggerFile("./docs/paths/friend.yaml"),
       ...loadSwaggerFile("./docs/paths/ranking.yaml"),
       ...loadSwaggerFile("./docs/paths/game-room.yaml"),
