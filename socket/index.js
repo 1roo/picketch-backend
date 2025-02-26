@@ -14,7 +14,7 @@ function socketHandler(server) {
   const game = io.of("/game");
   const dmChat = io.of("/dmChat");
 
-  // syncGameInfoWithPlayersFromDB();
+  syncGameInfoWithPlayersFromDB();
   game.use(authSocketMiddleware);
   dmChat.use(authSocketMiddleware);
 
