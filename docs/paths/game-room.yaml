@@ -59,7 +59,7 @@
   delete:
     tags:
       - GameRoom
-    summary: 게임방 생성
+    summary: 게임방 삭제
     operationId: deleteGameRoom
     parameters:
       - name: room_id
