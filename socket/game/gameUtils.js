@@ -245,8 +245,11 @@ exports.isUserInGame = (gameId, userId) => {
 exports.getGameIdFromGameInfo = (userId) => {
   for (let gameId in socketGamesInfo) {
     const game = socketGamesInfo[gameId];
-
-    const isUserExist = game.beforePlayers.some((player) => {
+    if (!game.beforePlayers) {
+      console.warn("테스트");
+      continue;
+    }
+    const isUserExist = game.beforePlayers?.some((player) => {
       return player.userId === userId;
     });
     console.log("유저가 있나요?", isUserExist);

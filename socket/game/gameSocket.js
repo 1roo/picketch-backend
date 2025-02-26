@@ -39,7 +39,7 @@ exports.gameSocket = async (io, socket) => {
   });
   // 게임방 퇴장
   socket.on("leaveGame", async () => {
-    await leaveGameRoomHandler(io, socket, true);
+    await leaveGameRoomHandler(io, socket);
   });
   // 게임방 채팅
   socket.on("gameMessage", async (payload) => {

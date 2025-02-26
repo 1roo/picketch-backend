@@ -118,7 +118,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
 };
 
 // 게임 퇴장 처리 로직
-exports.leaveGameRoomHandler = async (io, socket, isManualLeave = false) => {
+exports.leaveGameRoomHandler = async (io, socket) => {
   const transaction = await db.sequelize.transaction();
   try {
     const userInfo = getPlayerFromUsersInfo(socket.id);
