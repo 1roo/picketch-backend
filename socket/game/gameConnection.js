@@ -25,6 +25,7 @@ const {
 
 // 방장 참가 처리 로직
 exports.managerJoinHandler = async (io, socket, payload) => {
+  console.log("managerJoinHandler실행");
   const gameId = Number(payload.gameId);
   const inputPw = Number(payload.inputPw);
   console.log("페이로드", gameId, inputPw);
@@ -33,18 +34,18 @@ exports.managerJoinHandler = async (io, socket, payload) => {
   console.log("참가전에 유저정보", socketUsersInfo[socket.id]);
   const transaction = await db.sequelize.transaction();
   try {
-    console.log("asfqweqwe");
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
-    console.log("a111111");
     // 방장인 경우 db게임정보의 매니저아이디와 유저 아이디가 일치하는지 여부 확인
     const game = await getGameRoom(gameId, true, transaction);
-    console.log("22222");
     console.log("방장입장시 db 게임", game);
-    if (!game) throw new Error("db에존재하는 게임방이 없습니다.");
+    if (!game) {
+      throw new Error("db에 존재하는 게임방이 없습니다.");
+    }
     if (game && userInfo.userId === game.manager) {
       // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
       // 입장 처리 db
+      console.log("🛠 addUserToGameRoom 실행됨", gameId, userInfo.userId);
       await addUserToGameRoom(gameId, userInfo.userId, transaction);
       transaction.commit();
       createGameInfoFromDB(gameId, game);
@@ -70,11 +71,13 @@ exports.managerJoinHandler = async (io, socket, payload) => {
 
 // 게임 참가 처리 로직
 exports.joinGameRoomHandler = async (io, socket, payload) => {
+  console.log("joinGameRoomHandler실행");
   const gameId = Number(payload.gameId);
   const inputPw = Number(payload.inputPw);
   console.log("payload는", gameId, inputPw);
   console.log("payload는", typeof payload.gameId);
-  console.log("참가전에 게임정보", socketGamesInfo[gameId]);
+  console.log("joinGame에서 userInfo", socketUsersInfo);
+  console.log("참가전에 게임정보", socketGamesInfo);
   // 게임방 접속 요청
   const transaction = await db.sequelize.transaction();
   try {
@@ -85,31 +88,25 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
 
     console.log("사용자유저아이디", userInfo.gameId);
     console.log("들어갈려는 방 아이디", gameId);
-    // // 재연결시 참여방이 있는 경우
-    // if (userInfo.gameId === gameId) {
-    //   console.log();
-    //   console.log("기존 참여방", socket.rooms);
-    //   console.log("기존 참여방 있음");
-    //   addPlayerToGamesInfo(socket.id, userInfo.gameId);
-    //   socket.join(userInfo.gameId);
-    //   console.log("참가후에 게임정보", socketGamesInfo[gameId]);
-    //   // joinGame 성공 응답객체
-    //   const joinGameRes = getJoinRes(socket.id, "게임방 입장");
-    //   // updateParticipants 성공 응답객체
-    //   const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
-    //   socket.emit("joinGame", joinGameRes);
-    //   io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
-    //   return;
-    // }
+    // 재연결시 참여방이 있는 경우
+    if (userInfo.gameId === gameId) {
+      console.log("기존 참여방 있음");
+      addPlayerToGamesInfo(socket.id, userInfo.gameId);
+      socket.join(userInfo.gameId);
+      console.log("참가후에 게임정보", socketGamesInfo[gameId]);
+      // joinGame 성공 응답객체
+      const joinGameRes = getJoinRes(socket.id, "게임방 입장");
+      // updateParticipants 성공 응답객체
+      const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+      socket.emit("joinGame", joinGameRes);
+      io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
+      return;
+    }
     // if (userInfo.gameId) throw new Error(`다른방 ${userInfo.gameId}번에 참여중입니다.`);
     const game = await getGameRoom(gameId, true, transaction);
     if (!game) throw new Error("db에 존재하지 않는 방입니다.");
-    // if (game && !socketGamesInfo[gameId] && userInfo.userId === game.manager) {
-    //   // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
-    //   createGameInfoFromDB(gameId, game);
-    // }
-    const gameInfo = getGameInfoByGameId(gameId);
 
+    const gameInfo = getGameInfoByGameId(gameId);
     // 참가 가능 방 여부 확인
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 

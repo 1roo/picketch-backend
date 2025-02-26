@@ -23,7 +23,7 @@ exports.gameSocket = async (io, socket) => {
     await joinGameRoomHandler(io, socket, payload);
   });
   // 방장 입장
-  socket.on("mangerJoinGame", async (payload) => {
+  socket.on("managerJoinGame", async (payload) => {
     await managerJoinHandler(io, socket, payload);
   });
   // 게임 준비

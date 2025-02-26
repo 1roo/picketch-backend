@@ -57,10 +57,10 @@ exports.addGameRoom = async (req, res) => {
       is_lock: Boolean(isLock),
       pw: isLock ? pw : null,
     });
-    await db.PlayerGroup.create({
-      game_id: createGame.game_id,
-      user_id: user,
-    });
+    // await db.PlayerGroup.create({
+    //   game_id: createGame.game_id,
+    //   user_id: user,
+    // });
     success(res, "Success", { gameId: createGame.game_id });
   } catch (err) {
     databaseError(res, err);
