@@ -7,7 +7,8 @@ exports.getGameRoom = async (gameId, is_waiting, transaction) => {
   const game = await db.Game.findOne({
     where: {
       game_id: gameId,
-      is_waiting: Number(is_waiting),
+      // is_waiting: Number(is_waiting),
+      is_waiting: is_waiting,
     },
     transaction,
   });
@@ -21,11 +22,13 @@ exports.updateGameRoom = async (gameId, changeValue, transaction) => {
     where: { game_id: gameId, is_waiting: 1 },
     transaction,
   });
+
   return updateResult;
 };
 
 // 유저 방에 참가 처리 db
 exports.addUserToGameRoom = async (gameId, userId, transaction) => {
+  console.log("플레이어그룹에 참가자 정보db 넣기");
   const game = await db.Game.findOne({
     where: {
       game_id: gameId,
@@ -85,7 +88,6 @@ exports.getPlayerFromUsersInfo = (socketId) => {
     throw new Error("조회하려는 socketId가 없습니다.");
   }
   const userInfo = socketUsersInfo[socketId];
-  console.log("유저정보는 ", userInfo);
   if (!userInfo) throw new Error("userInfo에서 해당 유저를 찾을 수 없습니다.");
   return {
     userId: userInfo.userId,
@@ -172,6 +174,7 @@ exports.createGameInfoFromDB = (gameId, game) => {
     isGameEnd: null,
     players: [],
   };
+
   if (!socketGamesInfo[gameId]) throw new Error("gameInfo가 생성되지 않았습니다.");
 };
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
