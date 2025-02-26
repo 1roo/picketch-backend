@@ -1,4 +1,4 @@
--- Active: 1732688614523@@127.0.0.1@3306@picketch
+-- Active: 1732688622705@@127.0.0.1@3306@picketch
 CREATE DATABASE picketch
     DEFAULT CHARACTER SET = 'utf8mb4';
 
@@ -44,6 +44,8 @@ VALUES
 ('kfjierjiweroio', 'NAVER', '흰둥이', 'default_character.png', 5, 90, 'IN_GAME',NOW(),NOW());
 
 UPDATE user set user_score = user_score+20 WHERE user_id=5;
+UPDATE region set region_score = region_score+2000 WHERE region_id>23;
+
 INSERT INTO `notification`(`from_user_id`,`user_id`,`notification_type`,response_status,`content`,create_date,`updatedAt`)
 VALUES
 (1,10,'FRIEND_REQUEST','PENDING','훈이님이 친구 요청을 보냈습니다.',NOW(),NOW()),
@@ -53,6 +55,18 @@ VALUES(4,10,'FRIEND_REQUEST','PENDING','철수님이 친구 요청을 보냈습�
 (5,10,'FRIEND_REQUEST','PENDING','유리님이 친구 요청을 보냈습니다.',NOW(),NOW());
 INSERT INTO `notification`(`from_user_id`,`user_id`,`notification_type`,response_status,`content`,create_date,`updatedAt`)
 VALUES
-(6,10,'FRIEND_REQUEST','PENDING','채송화님이 친구 요청을 보냈습니다.',NOW(),NOW()),
+(6,10,'FRIEND_REQUEST','PENDING','채송화님이 친구 요청을 보냈습니다.',NOW(),NOW());
 (7,10,'FRIEND_REQUEST','PENDING','나미리님이 친구 요청을 보냈습니다.',NOW(),NOW()),
 (8,10,'FRIEND_REQUEST','PENDING','엄마님이 친구 요청을 보냈습니다.',NOW(),NOW());
+
+
+INSERT INTO `player_group`(`game_id`,`user_id`)
+VALUES
+(1,2),
+(1,3),
+(1,4);
+INSERT INTO `player_group`(`game_id`,`user_id`)
+VALUES
+(2,8);
+(2,6),
+(2,7);

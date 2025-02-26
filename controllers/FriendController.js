@@ -1,5 +1,10 @@
 const db = require("../models");
-const { databaseError, validationError, success } = require("../utils/common");
+const {
+  databaseError,
+  validationError,
+  success,
+  validationErrorWithMessage,
+} = require("../utils/common");
 
 // 친구 조회
 exports.getFriend = async (req, res) => {
@@ -27,17 +32,46 @@ exports.friendRequest = async (req, res) => {
     const sender = await db.User.findOne({
       where: { user_id: from_user_id },
     });
+    // 유효성 검사
+    // 1) 이미 친구인 경우
+    const is_friend = await db.Friend.findOne({
+      where: {
+        user_id,
+        friend_id: from_user_id,
+      },
+    });
+    if (is_friend) return validationErrorWithMessage(res, "이미 친구");
 
-    if (user_id === from_user_id) {
-      return validationError(res, "자기 자신에게 친구 요청 불가");
-    }
+    // 2) 자기 자신에게 친구 요청할 경우
+    if (user_id === from_user_id)
+      return validationErrorWithMessage(res, "자기 자신에게 친구 요청 불가");
 
+    // 3) 이미 보낸 요청인 경우
     const existingRequest = await db.Notification.findOne({
-      where: { from_user_id, user_id, notification_type: "FRIEND_REQUEST" },
+      where: {
+        from_user_id,
+        user_id,
+        notification_type: "FRIEND_REQUEST",
+        response_status: "PENDING",
+      },
     });
     if (existingRequest) {
-      return validationError(res, "이미 보낸 요청");
+      return validationErrorWithMessage(res, "이미 보낸 요청");
     }
+
+    // 4) 이미 받은 요청인 경우
+    const receiveRequest = await db.Notification.findOne({
+      where: {
+        user_id: from_user_id,
+        from_user_id: user_id,
+        notification_type: "FRIEND_REQUEST",
+        response_status: "PENDING",
+      },
+    });
+    if (receiveRequest) {
+      return validationErrorWithMessage(res, "이미 받은 요청");
+    }
+
     await db.Notification.create({
       user_id,
       from_user_id,
@@ -68,7 +102,7 @@ exports.acceptFriendRequest = async (req, res) => {
       },
     });
     if (!request) {
-      return validationError(res, "유효하지 않은 친구 요청입니다");
+      return validationErrorWithMessage(res, "유효하지 않은 친구 요청");
     }
 
     // 닉네임 가져오기
@@ -83,7 +117,7 @@ exports.acceptFriendRequest = async (req, res) => {
       },
     });
     if (!user || !sender) {
-      return validationError(res, "유효하지 않은 ID입니다.");
+      return validationErrorWithMessage(res, "유효하지 않은 ID");
     }
 
     // 친구 추가
@@ -122,7 +156,7 @@ exports.rejectFriendRequest = async (req, res) => {
     });
 
     if (!request) {
-      return validationError(res, "유효하지 않은 친구 요청입니다");
+      return validationError(res, "유효하지 않은 친구 요청");
     }
     // 요청 상태 거절로 변경
     await request.update({ response_status: "REJECTED" });

@@ -16,7 +16,6 @@ paths:
   allOf:
     - $ref: "./paths/auth.yaml"
     - $ref: "./paths/user.yaml"
-    - $ref: "./paths/game.yaml"
 
 tags:
   - name: Auth
@@ -29,5 +28,3 @@ tags:
     description: 랭킹 관련 API
   - name: GameRoom
     description: 게임방 관련 API
-  - name: Game
-    description: 게임 관련 API

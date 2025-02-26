@@ -16,7 +16,7 @@ schemas:
     properties:
       code:
         type: string
-        enum: [SF, DBE, VF, DN, AF, RF]
+        enum: [SF, DBE, VF, DN, AF, RF, AL]
       message:
         type: string
     examples:
@@ -44,6 +44,10 @@ schemas:
         value:
           code: "RF"
           message: "Invalid refresh token."
+      alreadyLoggedOut:
+        value:
+          code: "AL"
+          message: "Already logged out."
 
   # 토큰
   RefreshTokenRequest:
@@ -64,18 +68,35 @@ schemas:
         enum: [SU]
       message:
         type: string
-      accessToken:
-        type: string
-      expirationTime:
-        type: integer
+      data:
+        type: object
+        properties:
+        userId:
+          type: integer
+        accessToken:
+          type: string
+        expirationTime:
+          type: integer
     example:
       code: "SU"
       message: "Success"
-      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      expirationTime: 3600
+      data:
+        userId: 1
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expirationTime: 3600
 
   # 로그인
   SocialLoginRequest:
+    type: object
+    required:
+      - code
+    properties:
+      code:
+        type: string
+    example:
+      code: "4/P7q7W91a-oMsCeLvIaQm6bTrgtp7"
+
+  GoogleLoginRequest:
     type: object
     required:
       - accessToken
@@ -93,24 +114,31 @@ schemas:
         enum: [SU]
       message:
         type: string
-      accessToken:
-        type: string
-      refreshToken:
-        type: string
-      hasProfile:
-        type: boolean
-      tokenType:
-        type: string
-      expirationTime:
-        type: integer
+      data:
+        type: object
+        properties:
+          userId:
+            type: integer
+          accessToken:
+            type: string
+          refreshToken:
+            type: string
+          hasProfile:
+            type: boolean
+          tokenType:
+            type: string
+          expirationTime:
+            type: integer
     example:
       code: "SU"
       message: "Success"
-      accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      hasProfile: true
-      tokenType: "Bearer"
-      expirationTime: 3600
+      data:
+        userId: 1
+        accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        hasProfile: true
+        tokenType: "Bearer"
+        expirationTime: 3600
 
   # 로그아웃
   LogoutResponse:
@@ -126,6 +154,18 @@ schemas:
       message: "Success"
 
   # 프로필
+  NicknameResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        enum: [SU]
+      message:
+        type: string
+    example:
+      code: "SU"
+      message: "Success"
+
   ProfileRequest:
     type: object
     required:
@@ -355,7 +395,6 @@ schemas:
     type: object
     required:
       - roomName
-      - managerId
       - round
       - isLock
       - pw
@@ -365,9 +404,6 @@ schemas:
         minLength: 2
         maxLength: 30
         example: "1반 드루와"
-      managerId:
-        type: integer
-        example: 3
       round:
         type: integer
         example: 2
@@ -377,7 +413,7 @@ schemas:
         type: integer
         minLength: 4
         maxLength: 8
-        example: 0000
+        example: "0000"
 
   GameRoomResponse:
     type: object
@@ -397,6 +433,10 @@ schemas:
               type: integer
             roomName:
               type: string
+            is_lock:
+              type: boolean
+            playerCount:
+              type: integer
     example:
       {
         "code": "SU",
@@ -405,10 +445,30 @@ schemas:
           {
             "rooms":
               [
-                { "room_id": 1, "roomName": "1반 드루와", "is_lock": "true" },
-                { "room_id": 3, "roomName": "나보다 잘하는 사람?", "is_lock": "false" },
-                { "room_id": 5, "roomName": "맞짱ㄱ", "is_lock": "true" },
-                { "room_id": 9, "roomName": "같이 해요~", "is_lock": "true" },
+                {
+                  "room_id": 1,
+                  "roomName": "1반 드루와",
+                  "is_lock": "true",
+                  "playerCount": 2,
+                },
+                {
+                  "room_id": 3,
+                  "roomName": "나보다 잘하는 사람?",
+                  "is_lock": "false",
+                  "playerCount": 3,
+                },
+                {
+                  "room_id": 5,
+                  "roomName": "맞짱ㄱ",
+                  "is_lock": "true",
+                  "playerCount": 5,
+                },
+                {
+                  "room_id": 9,
+                  "roomName": "같이 해요~",
+                  "is_lock": "true",
+                  "playerCount": 7,
+                },
               ],
           },
       }
@@ -427,26 +487,15 @@ schemas:
         rooms:
           type: array
           properties:
-            user_id:
+            userId:
               type: integer
-            nickname:
-              type: string
-            score:
+            percentage:
               type: integer
     example:
       {
         "code": "SU",
         "message": "Success",
-        "data":
-          {
-            "userRanking":
-              [
-                { "user_id": 1, "nickname": "짱구", "score": 2930 },
-                { "user_id": 3, "nickname": "훈이", "score": 2905 },
-                { "user_id": 5, "nickname": "맹구", "score": 2850 },
-                { "user_id": 9, "nickname": "철수", "score": 2800 },
-              ],
-          },
+        "data": { "userRanking": { "userId": 2, "percentage": "60.00" } },
       }
 
   RankingRegionResponse:
@@ -463,26 +512,18 @@ schemas:
         rooms:
           type: array
           properties:
-            region_id:
+            userId:
               type: integer
-            region:
-              type: string
-            score:
+            regionId:
+              type: integer
+            percentage:
               type: integer
     example:
       {
         "code": "SU",
         "message": "Success",
         "data":
-          {
-            "regionRanking":
-              [
-                { "region_id": 2, "region": "도봉구", "score": 29300 },
-                { "region_id": 3, "region": "성북구", "score": 25500 },
-                { "region_id": 4, "region": "강남구", "score": 23000 },
-                { "region_id": 8, "region": "서초구", "score": 22300 },
-              ],
-          },
+          { "regionRanking": { "userId": 9, "regionId": 5, "percentage": "50.00" } },
       }
 
 securitySchemes:

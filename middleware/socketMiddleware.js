@@ -1,43 +1,42 @@
-const jwt = require("jsonwebtoken");
 const db = require("../models");
-const { addPlayerToUsersInfo } = require("../socket/gameUtils");
-const { socketUsersInfo } = require("../socket/gameStore");
+const {
+  getGameInfoByGameId,
+  getGameIdFromGameInfo,
+} = require("../socket/game/gameUtils");
 
 exports.authSocketMiddleware = async (socket, next) => {
   try {
-    const tokenHeader = socket.handshake.headers["authorization"];
-    if (!tokenHeader.startsWith("Bearer")) throw new Error("잘못된 토큰 형식입니다.");
-    const token = tokenHeader.split(" ")[1];
-    console.log("토큰내용은 ", token);
-    // if (!token) {
-    //   throw new Error("토큰값이 존재 하지 않습니다.");
-    // }
+    const query = socket.handshake.query;
+    const userId = Number(query.userId);
+    console.log("소켓연결전 쿼리에 담긴 유저 아이디는 ", userId);
 
-    // 토큰 복호화
-    // const auth = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    //   if (err) {
-    //     let message;
-    //     if (err.name === "TokenExpiredError") {
-    //       message = "토큰이 만료되었습니다.";
-    //     } else if (err.name === "JsonWebTokenError") {
-    //       message = "토큰값이 잘못되었습니다.";
-    //     } else {
-    //       message = "기타 토큰 에러";
-    //     }
-    //     return next(new Error(message));
-    //   } else {
-    //     // 복호화 성공시
-    //     decoded.userId = auth.user_id;
-    //     return next();
-    //   }
-    // });
-    // socket.userId = 3;
-    const userId = Number(token);
-    socket.userId = userId;
+    if (isNaN(userId)) throw new Error("유효하지 않은 userId입니다");
+
+    const findResult = await db.User.findOne({
+      where: {
+        user_id: userId,
+      },
+      attributes: ["user_id", "nickname", "character", "region_id", "user_score"],
+      include: [{ model: db.Region, attributes: ["region"] }],
+    });
+
+    if (!findResult) throw new Error("존재하지 않는 유저입니다.");
+
+    const { user_id, nickname, character } = findResult;
+    const { region } = findResult.region;
+    const gameId = getGameIdFromGameInfo(user_id);
+    console.log("찾은 gameId는", gameId);
+    socket.userInfo = {
+      userId: user_id,
+      nickname,
+      region,
+      character,
+      gameId: gameId,
+    };
     return next();
   } catch (err) {
     // 에러발생시 클라이언트에서 connect_error 이벤트로 소켓 연결 실패 수신
     console.log(err);
-    return next(err);
+    return next(new Error(err.message));
   }
 };

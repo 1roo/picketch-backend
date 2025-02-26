@@ -1,78 +1,122 @@
 const socketIO = require("socket.io");
-const { joinGameRoomHandler, leaveGameRoomHandler } = require("./gameConnection");
-const { gameChatHandler } = require("./gameChat");
+const redisManager = require("../utils/redisManager");
+const redisConfig = require("../config/redis");
+const { NotificationHandler } = require("./notificationHandler");
+const { FriendStatusHandler } = require("./friendStatusHandler");
+const { validationError } = require("../utils/common");
+const { dmChatSocket } = require("./dmChat");
+const { gameSocket } = require("./game/gameSocket");
+const { syncGameInfoWithPlayersFromDB } = require("./game/gameUtils");
 const { authSocketMiddleware } = require("../middleware/socketMiddleware");
-const {
-  syncUserInfoFromDB,
-  expireGameFromDB,
-  syncGameInfoFromDB,
-} = require("./gameUtils");
-const { startGameHandler, readyGameHandler } = require("./gameSetup");
-const { drawCanvasHandler, clearCanvasHandler } = require("./gameCanvas");
+const { performRedisCleanup } = require("../utils/redisUtils");
 
-let io;
-
-async function socketHandler(server) {
-  io = socketIO(server, {
+function socketHandler(server, redis) {
+  const io = socketIO(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: process.env.CLIENT_URL,
+      credentials: true,
     },
   });
 
-  // 소켓연결 전 유효한 토큰 검증 로직
   io.use(authSocketMiddleware);
 
-  // 서버 재실행시 기존 방 만료처리
-  // await expireGameFromDB();
-  await syncGameInfoFromDB();
+  const game = io.of("/game");
+  const dmChat = io.of("/dmChat");
+  const notifications = io.of("/notifications");
+  const friendStatus = io.of("/friendStatus");
 
-  io.on("connect", async (socket) => {
-    // 소켓연결하는 유저 저장 (socketUserInfo)
-    await syncUserInfoFromDB(socket, socket.userId);
+  syncGameInfoWithPlayersFromDB();
+  const namespaces = [notifications, friendStatus, game, dmChat];
+  namespaces.forEach(namespace => namespace.use(authSocketMiddleware));
 
-    // 연결 테스트 확인용 임시 작성
-    socket.emit("message", socket.id);
+  // Redis 서버 상태 초기화
+  initializeRedisServer(redis);
 
-    // 게임방 입장
-    socket.on("joinGame", async (payload) => {
-      await joinGameRoomHandler(io, socket, payload);
-    });
-    // 게임 준비
-    socket.on("readyGame", async () => {
-      await readyGameHandler(io, socket);
-    });
-    // 게임 시작
-    socket.on("startGame", async () => {
-      await startGameHandler(io, socket);
-    });
-    // 게임방 퇴장
-    socket.on("leaveGame", async () => {
-      await leaveGameRoomHandler(io, socket, true);
-    });
-    // 게임방 채팅
-    socket.on("sendGameMessage", async (payload) => {
-      await gameChatHandler(io, socket, payload);
-    });
-    // 게임방 그림 그리기
-    socket.on("drawCanvas", async (payload) => {
-      await drawCanvasHandler(io, socket, payload);
-    });
-    // 게임방 그림 초기화
-    socket.on("clearCanvas", async () => {
-      await clearCanvasHandler(io, socket);
-    });
-    // 연결 종료
-    socket.on("disconnect", async () => {
-      await leaveGameRoomHandler(io, socket, false);
-    });
+  // ? 외부 소켓 핸들러 사용하기 위한 인스턴스 // 나중에 필요 없으면 삭제하기
+  const notificationHandler = new NotificationHandler(notifications, redis);
+  const friendStatusHandler = new FriendStatusHandler(friendStatus, redis);
+
+  // game
+  game.on("connection", (socket) => gameSocket(io, socket));
+  // dmChat
+  dmChat.on("connection", (socket) => dmChatSocket(io, socket));
+
+  // 서버 상태 모니터링 시작
+  startServerMonitoring(redis);
+}
+
+// Redis 서버 초기화 함수
+function initializeRedisServer(redis) {
+  const pipeline = redis.pipeline();
+  pipeline.set("socket_server", "running");
+  pipeline.expire("socket_server", 86400); // 1일 후 만료
+  pipeline.exec();
+
+  redis.on("connect", () => {
+    console.log("Redis socket server connection running..");
+  });
+
+  redis.on("error", (err) => {
+    console.error("Redis socket server connection error", err);
   });
 }
 
-module.exports = { io, socketHandler };
+// 서버 상태 모니터링 함수
+async function checkServerStatus(redis) {
+  try {
+    const pipeline = redis.pipeline();
+    pipeline.get("socket_server");
+    pipeline.info("memory");
+    pipeline.keys(`${redisConfig.keyPrefix.socket}*`);
 
-// 클라이언트에서 헤더에 토큰보내는법
-// const socket = io("http://localhost:5000", {
-//   extraHeaders: {
-//     Authorization: "Bearer your_token_here",
-//   },
-// });
+    const results = await pipeline.exec();
+    const status = results[0][1];
+    const memoryInfo = results[1][1];
+    const socketKeys = results[2][1];
+
+    // 메모리 사용량 파싱
+    const memoryUsage = parseInt(
+      memoryInfo
+        .split("\r\n")
+        .find((line) => line.startsWith("used_memory:"))
+        .split(":")[1],
+    );
+
+    const memoryThreshold = redisConfig.memoryManagement.limits.memoryThreshold;
+
+    console.log(`Socket server status: ${status}`);
+    console.log(`Connected clients: ${socketKeys.length}`);
+    console.log(`Memory usage: ${memoryUsage} bytes`);
+
+    // 메모리 임계값 초과 시 정리 작업 수행
+    if (memoryUsage > memoryThreshold) {
+      console.warn(`High Redis memory usage detected: ${memoryUsage} bytes`);
+      await performRedisCleanup(redis);
+    }
+  } catch (err) {
+    console.error("Server status check error:", err);
+  }
+}
+
+// 모니터링 시작 함수
+function startServerMonitoring(redis) {
+  // 초기 상태 체크
+  checkServerStatus(redis);
+
+  // 10분마다 상태 체크 실행 (부하 감소)
+  const monitoringInterval = setInterval(() => checkServerStatus(redis), 10 * 60 * 1000);
+
+  // 메모리 정리 작업
+  const cleanupInterval = setInterval(
+    () => performRedisCleanup(redis),
+    redisConfig.memoryManagement.limits.cleanupInterval,
+  );
+
+  // 서버 종료 시 인터벌 정리
+  process.on("SIGTERM", () => {
+    clearInterval(monitoringInterval);
+    clearInterval(cleanupInterval);
+  });
+}
+
+module.exports = { socketHandler };

@@ -54,8 +54,11 @@ const authController = {
       );
 
       success(res, "Success", {
-        accessToken,
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          accessToken,
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
@@ -68,7 +71,29 @@ const authController = {
   // 카카오 로그인
   kakaoLogin: async (req, res) => {
     try {
-      const { accessToken } = req.body;
+      const { code } = req.body;
+
+      if (!code) {
+        return signInFailed(res, "인가 코드(code)가 없습니다.");
+      }
+
+      const tokenResponse = await axios.post(
+        "https://kauth.kakao.com/oauth/token",
+        null,
+        {
+          params: {
+            code,
+            client_id: process.env.KAKAO_REST_API_KEY,
+            client_secret: process.env.KAKAO_CLIENT_SECRET,
+            redirect_uri: process.env.KAKAO_REDIRECT_URI,
+            grant_type: "authorization_code",
+          },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        },
+      );
+
+      const accessToken = tokenResponse.data.access_token;
+      console.log("✅ 카카오 Access Token: ", accessToken);
 
       const response = await axios.get("https://kapi.kakao.com/v2/user/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -93,9 +118,9 @@ const authController = {
             social_id: kakaoId,
             social_type: "KAKAO",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);
@@ -116,15 +141,17 @@ const authController = {
       const hasProfile = !!(
         user.nickname &&
         !user.nickname.startsWith("T_") &&
-        user.character !== "default_character.png" &&
         user.region_id
       );
 
       success(res, "Success", {
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -139,9 +166,9 @@ const authController = {
     try {
       const { accessToken } = req.body;
 
-      const response = await axios.get(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${accessToken}`,
-      );
+      const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
 
       const googleId = response.data.sub;
 
@@ -162,9 +189,9 @@ const authController = {
             social_id: googleId,
             social_type: "GOOGLE",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);
@@ -186,15 +213,17 @@ const authController = {
       const hasProfile = !!(
         user.nickname &&
         !user.nickname.startsWith("T_") &&
-        user.character !== "default_character.png" &&
         user.region_id
       );
 
       success(res, "Success", {
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -207,7 +236,27 @@ const authController = {
   // 네이버 로그인
   naverLogin: async (req, res) => {
     try {
-      const { accessToken } = req.body;
+      const { code } = req.body;
+
+      if (!code) {
+        return signInFailed(res, "인가 코드(code)가 없습니다.");
+      }
+
+      const tokenResponse = await axios.post(
+        "https://nid.naver.com/oauth2.0/token",
+        null,
+        {
+          params: {
+            code,
+            client_id: process.env.NAVER_CLIENT_ID,
+            client_secret: process.env.NAVER_CLIENT_SECRET,
+            grant_type: "authorization_code",
+          },
+        },
+      );
+
+      const accessToken = tokenResponse.data.access_token;
+      console.log("✅ 네이버 Access Token: ", accessToken);
 
       const response = await axios.get("https://openapi.naver.com/v1/nid/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -232,9 +281,9 @@ const authController = {
             social_id: naverId,
             social_type: "NAVER",
             status: "OFFLINE",
-            nickname: `T_${Date.now()}`, // 임시 닉네임
-            character: "default_character.png", // 기본 캐릭터
-            region_id: 1, // 기본 지역 ID
+            nickname: `T_${Date.now()}`,
+            character: "default_character.png",
+            region_id: 1,
           });
         } catch (err) {
           return databaseError(res, err);
@@ -253,13 +302,20 @@ const authController = {
 
       const tokens = generateTokens(user);
 
-      const hasProfile = !!(user.nickname && user.character && user.region_id);
+      const hasProfile = !!(
+        user.nickname &&
+        !user.nickname.startsWith("T_") &&
+        user.region_id
+      );
 
       success(res, "Success", {
-        ...tokens,
-        hasProfile,
-        tokenType: "Bearer",
-        expirationTime: 3600,
+        data: {
+          userId: user.user_id,
+          ...tokens,
+          hasProfile,
+          tokenType: "Bearer",
+          expirationTime: 3600,
+        },
       });
     } catch (err) {
       if (err.response || err.request) {
