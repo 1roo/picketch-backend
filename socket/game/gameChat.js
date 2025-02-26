@@ -12,17 +12,17 @@ const {
 
 exports.gameChatHandler = (io, socket, payload) => {
   // 게임 채팅 보내기
-  const { message } = payload;
+  const { gameMessage } = payload;
   try {
     const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(userInfo.gameId);
     console.log("채팅보내는사람은", userInfo.userId, userInfo.nickname, userInfo.gameId);
 
     // message 유효성 검사
-    if (!message) {
+    if (!gameMessage) {
       throw new Error("메세지가 존재 하지 않습니다.");
     }
-    if (typeof message !== "string") {
+    if (typeof gameMessage !== "string") {
       throw new Error("message가 문자열이 아닙니다.");
     }
 
@@ -34,7 +34,7 @@ exports.gameChatHandler = (io, socket, payload) => {
       type: "SUCCESS",
       senderId: userInfo.userId,
       senderNick: userInfo.nickname,
-      gameMessage: message,
+      gameMessage: gameMessage,
     };
 
     // 전체에게 메세지만 전달
@@ -47,14 +47,15 @@ exports.gameChatHandler = (io, socket, payload) => {
       !gameInfo.isAnswerFound
     ) {
       console.log("현재게임정보", socketGamesInfo[userInfo.gameId]);
-      console.log("채팅치는 사람 id와 메세지", userInfo.userId, message);
+      console.log("채팅치는 사람 id와 메세지", userInfo.userId, gameMessage);
       console.log("현재 턴", gameInfo.currentRound);
       console.log("현재 턴의 정답", socketGamesInfo[userInfo.gameId].keywords);
       console.log(
         "현재 턴의 키워드",
         socketGamesInfo[userInfo.gameId].currentRoundKeyword,
       );
-      const isAnswer = message === socketGamesInfo[userInfo.gameId].currentRoundKeyword;
+      const isAnswer =
+        gameMessage === socketGamesInfo[userInfo.gameId].currentRoundKeyword;
       console.log("보낸 메세지가 정답인가요?", isAnswer);
       if (isAnswer) {
         // 정답 맞추면 해당 라운드 종료 처리 isAnswerFound 값을 true로 변경
