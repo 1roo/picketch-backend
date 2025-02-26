@@ -76,3 +76,17 @@ VALUES
 (10,1,"훈이"),
 (10,2,"짱구"),
 (10,2,"맹구");
+
+INSERT INTO dm_chat (dm_id, message, sender_id, is_read, timestamp,send_time,`updatedAt`)
+VALUES
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (2, '난 짱구', 2, false,"02월 26일 21:01", NOW(),NOW()),
+  (2, '난 짱구', 2, false, "02월 26일 21:01",NOW(),NOW()),
+  (2, '난 짱구', 2, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false,"02월 26일 21:01", NOW(),NOW()),
+  (3, '난 맹구', 3, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false,"02월 26일 21:01", NOW(),NOW());
+
