@@ -6,23 +6,22 @@ const DmChat = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
-        comment: "고유 채팅 id"
+        comment: "고유 채팅 id",
       },
       dm_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        comment: "고유 dm id"
+        comment: "고유 dm id",
       },
       message: {
         type: DataTypes.STRING,
         allowNull: false,
-        comment: "채팅 메세지 내용"
-
+        comment: "채팅 메세지 내용",
       },
       sender_id: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        comment: "메세지 보낸 사용자 id"
+        comment: "메세지 보낸 사용자 id",
       },
       is_read: {
         type: DataTypes.BOOLEAN,
@@ -30,12 +29,17 @@ const DmChat = (sequelize, DataTypes) => {
         defaultValue: false,
         comment: "읽음 여부",
       },
+      timestamp: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        comment: "메세지 보낸 시간",
+      },
     },
     {
       timestamps: true,
       freezeTableName: true,
-      createdAt: "send_time"
-    }
+      createdAt: "send_time",
+    },
   );
 };
 module.exports = DmChat;
