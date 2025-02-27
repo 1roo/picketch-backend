@@ -9,7 +9,8 @@ const {
 
 exports.drawCanvasHandler = (io, socket, payload) => {
   // from 클리이언트 with x,y,brushColor
-  const { x, y, brushColor } = payload;
+  const { x, y, brushColor, newLine } = payload;
+  console.log("그리기에서", payload);
   try {
     // payload 유효성 검사
     if (typeof brushColor !== "string" || !brushColor)

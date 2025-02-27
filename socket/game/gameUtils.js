@@ -163,7 +163,7 @@ exports.createGameInfoFromDB = (gameId, game) => {
       name: game.name,
       currentTurnUserId: null,
       currentRound: null,
-      maxRound: game.round,
+      maxRound: game.round * 1,
       isLock: game.is_lock,
       pw: game.pw,
       manager: game.manager,
