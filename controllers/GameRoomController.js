@@ -50,6 +50,7 @@ exports.addGameRoom = async (req, res) => {
     });
     if (duplicateRoomName) return validationErrorWithMessage(res, "방이름 중복");
 
+    //
     const createGame = await db.Game.create({
       name: roomName,
       manager: user,
