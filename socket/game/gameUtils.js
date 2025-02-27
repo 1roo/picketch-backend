@@ -176,7 +176,7 @@ exports.createGameInfoFromDB = (gameId, game) => {
       players: [],
     };
   }
-
+  console.log("createGameInfoFromDB생성후 게임정보", socketGamesInfo[gameId]);
   if (!socketGamesInfo[gameId]) throw new Error("gameInfo가 생성되지 않았습니다.");
 };
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
@@ -789,4 +789,9 @@ exports.getClearRes = (socketId) => {
     gameId: userInfo.gameId || null,
     drawUserId: userInfo.userId || null,
   };
+};
+
+// startGame응답
+exports.getStartGameRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
 };
