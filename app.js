@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const YAML = require("yaml");
 const { sequelize } = require("./models");
-const redisManager = require("./utils/redisManager");
+// const redisManager = require("./utils/redisManager");
 const indexRouter = require("./routes");
 const { socketHandler } = require("./socket/index");
 const swaggerUi = require("swagger-ui-express");
@@ -20,7 +20,7 @@ const SWAGGER_URL = "/api-docs";
 const PORT = process.env.SERVER_PORT;
 
 // Redis
-const redis = redisManager.connect();
+// const redis = redisManager.connect();
 
 // Middleware
 app.use(express.urlencoded({ extended: false }));
@@ -68,13 +68,6 @@ const swaggerDocument = loadSwaggerFiles();
 app.use(SERVER_PREFIX, indexRouter);
 app.use(SWAGGER_URL, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Server
-process.on("SIGTERM", () => {
-  console.log("Closing Redis connection");
-  redisManager.close();
-  process.exit(0);
-});
-
 const startServer = async () => {
   try {
     await sequelize.sync({ force: false });
@@ -82,7 +75,8 @@ const startServer = async () => {
 
     const server = http.createServer(app);
 
-    socketHandler(server, redis);
+    // socketHandler(server, redis);
+    socketHandler(server);
 
     server.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
@@ -98,4 +92,5 @@ const startServer = async () => {
 
 startServer();
 
-module.exports = { app, redis };
+// module.exports = { app, redis };
+module.exports = { app };

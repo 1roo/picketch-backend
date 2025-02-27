@@ -70,3 +70,23 @@ VALUES
 (2,8);
 (2,6),
 (2,7);
+
+INSERT INTO friend (user_id,friend_id,friend_nickname)
+VALUES
+(10,1,"훈이"),
+(10,2,"짱구"),
+(10,2,"맹구");
+
+INSERT INTO dm_chat (dm_id, message, sender_id, is_read, timestamp,send_time,`updatedAt`)
+VALUES
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (1, '난 훈이', 1, false, "02월 26일 21:01",NOW(),NOW()),
+  (2, '난 짱구', 2, false,"02월 26일 21:01", NOW(),NOW()),
+  (2, '난 짱구', 2, false, "02월 26일 21:01",NOW(),NOW()),
+  (2, '난 짱구', 2, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false,"02월 26일 21:01", NOW(),NOW()),
+  (3, '난 맹구', 3, false, "02월 26일 21:01",NOW(),NOW()),
+  (3, '난 맹구', 3, false,"02월 26일 21:01", NOW(),NOW());
+

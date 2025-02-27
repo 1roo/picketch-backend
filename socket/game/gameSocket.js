@@ -6,6 +6,7 @@ const {
   socketDisconnect,
   managerJoinHandler,
 } = require("./gameConnection");
+const { updateGameInfoHandler } = require("./gameInfoUpdate");
 const {
   readyGameHandler,
   startGameHandler,
@@ -25,6 +26,10 @@ exports.gameSocket = async (io, socket) => {
   // 방장 입장
   socket.on("managerJoinGame", async (payload) => {
     await managerJoinHandler(io, socket, payload);
+  });
+  // 게임 정보 요청
+  socket.on("updateGameInfo", async () => {
+    updateGameInfoHandler(io, socket);
   });
   // 게임 준비
   socket.on("readyGame", async () => {

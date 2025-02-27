@@ -106,6 +106,9 @@ exports.startGameHandler = async (io, socket) => {
 
     console.log("게임시작시 게임정보", socketGamesInfo[userInfo.gameId]);
     emitRoundStartWithTurn(io, socket.id, "startGame");
+
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+    io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
   } catch (err) {
     console.log(err);
     const startErrRes = getErrorRes(socket.id, err.message);

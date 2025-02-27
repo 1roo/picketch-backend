@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Naver Login Test</title>
+    <script
+      type="text/javascript"
+      src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
+      charset="utf-8"
+    ></script>
+  </head>
+  <body>
+    <div id="naverIdLogin"></div>
+    <div id="token"></div>
+
+    <script>
+      const naverLogin = new naver.LoginWithNaverId({
+        clientId: "Cky3XbBIl2qcYKhQHsEh",
+        callbackUrl: "http://localhost:8080",
+        isPopup: false,
+        loginButton: { color: "green", type: 3, height: 60 },
+      });
+      naverLogin.init();
+
+      naverLogin.getLoginStatus(function (status) {
+        if (status) {
+          const accessToken = naverLogin.accessToken;
+          document.getElementById("token").innerText = "Access Token: " + accessToken;
+        }
+      });
+    </script>
+  </body>
+</html>
