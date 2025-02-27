@@ -45,22 +45,22 @@ exports.managerJoinHandler = async (io, socket, payload) => {
     if (game && userInfo.userId === game.manager) {
       // db에 존재하지만 gameInfo 메모리내에 없는 경우 추가
       // 입장 처리 db
-      console.log("🛠 addUserToGameRoom 실행됨", gameId, userInfo.userId);
+
       await addUserToGameRoom(gameId, userInfo.userId, transaction);
       transaction.commit();
       createGameInfoFromDB(gameId, game);
       addPlayerToGamesInfo(socket.id, gameId);
       joinGameToUsersInfo(socket.id, gameId);
       socket.join(gameId);
-      console.log("참가후 게임정보", socketGamesInfo);
-      console.log("참가후 유저정보", socketUsersInfo[socket.id]);
+      console.log("매니저 참가후 게임정보", socketGamesInfo);
+      console.log("매니저 참가후 유저정보", socketUsersInfo[socket.id]);
       // joinGame 성공 응답객체
       const joinGameRes = getJoinRes(socket.id, "게임방 입장");
       // updateParticipants 성공 응답객체
       const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
       console.log("게임입장처리후에 전체 게임정보", socketGamesInfo);
       // 응답 처리
-      socket.emit("mangerJoinGame", joinGameRes);
+      socket.emit("managerJoinGame", joinGameRes);
       io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
     }
   } catch (err) {
@@ -145,6 +145,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     // 응답 처리
     socket.emit("joinGame", joinGameRes);
     io.of("/game").to(gameId).emit("updateGameInfo", updateGameInfoRes);
+    console.log("참가할때 updateGameInfo");
   } catch (err) {
     console.log(err);
     await transaction.rollback();
@@ -260,6 +261,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
 
 // 게임 퇴장 처리 로직
 exports.leaveGameRoomHandler = async (io, socket) => {
+  console.log("asdasdasdasleaveGameRoomHandler 퇴장 실행");
   const transaction = await db.sequelize.transaction();
   try {
     const userInfo = getPlayerFromUsersInfo(socket.id);
@@ -312,7 +314,7 @@ exports.leaveGameRoomHandler = async (io, socket) => {
     const gameInfo1 = socketGamesInfo;
     socket.emit("leaveGame", leaveGameRes);
     console.log("퇴장시 보낼 방은", userInfo.gameId);
-    io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
+    // io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
     // 퇴장 처리 socketUserInfo
     leaveGameFromUsersInfo(socket.id);
     console.log("퇴장후 유저", userInfo1);
@@ -325,6 +327,7 @@ exports.leaveGameRoomHandler = async (io, socket) => {
 
 exports.socketDisconnect = async (io, socket) => {
   // 소켓 연결이 강제로 끊어질때
+  console.log("socketDisconnect 실행");
   const transaction = await db.sequelize.transaction();
 
   try {
