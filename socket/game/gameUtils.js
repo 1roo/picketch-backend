@@ -162,7 +162,7 @@ exports.createGameInfoFromDB = (gameId, game) => {
     socketGamesInfo[gameId] = {
       name: game.name,
       currentTurnUserId: null,
-      currentRound: null,
+      currentRound: 1,
       maxRound: game.round * 1,
       isLock: game.is_lock,
       pw: game.pw,

@@ -35,7 +35,7 @@ exports.managerJoinHandler = async (io, socket, payload) => {
   try {
     if (!gameId || typeof gameId !== "number")
       throw new Error("유효한 gameId 정보가 없습니다.");
-    const game = await getGameRoom(gameId, true, transaction);
+    const game = await getGameRoom(gameId, true);
     if (!game) {
       throw new Error("db에 존재하는 게임방이 없습니다.");
     }
@@ -71,7 +71,6 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
   console.log("joinGame에서 참가전에 게임정보", socketGamesInfo);
   console.log("joinGame에서 payload는", gameId);
   // 게임방 접속 요청
-  const transaction = await db.sequelize.transaction();
   try {
     // gameId 유효성 검증
     if (!gameId || typeof gameId !== "number")
@@ -126,7 +125,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     console.log("참가할때 updateGameInfo");
   } catch (err) {
     console.log(err);
-    const joinGameErrRes = getErrorRes(socket.id, message);
+    const joinGameErrRes = getErrorRes(socket.id, err.message);
     socket.emit("joinGame", joinGameErrRes);
   }
 };
