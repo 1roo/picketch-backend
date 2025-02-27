@@ -23,6 +23,8 @@ exports.updateGameInfoHandler = (io, socket) => {
       newIsGameEnd,
     });
     const updateGameRes = getUpdateGameInfoRes(socket.id);
+    console.log("✅✅✅✅✅✅✅✅업데이트 전 응답", userInfo);
+    console.log("✅✅✅✅✅✅✅✅업데이트 응답", updateGameRes);
     socket.emit("updateGameInfo", updateGameRes);
   } catch (err) {
     console.log(err);
