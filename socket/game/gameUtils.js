@@ -349,6 +349,7 @@ exports.setGameFromGamesInfo = ({
   newIsAnswerFound,
   newIsNextRoundSettled,
   newIsGameEnd,
+  newIsGameStart,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
   console.log("처음방입장시 게임정보");
@@ -371,6 +372,9 @@ exports.setGameFromGamesInfo = ({
       }),
       ...(newIsGameEnd !== undefined && {
         isGameEnd: newIsGameEnd,
+      }),
+      ...(newIsGameStart !== undefined && {
+        isGameStart: newIsGameStart,
       }),
     };
     console.log("게임 정보 세팅후 ", socketGamesInfo[gameId]);
@@ -643,6 +647,11 @@ exports.getEndRoundRes = (socketId, message) => {
   return exports.successRes(socketId, message);
 };
 
+// endEndTimer 성공 응답
+exports.getEndTimerRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
 // endGame 성공 응답
 exports.getEndGameRes = (socketId) => {
   if (!socketId) {
@@ -720,6 +729,7 @@ exports.getUpdateGameInfoRes = (socketId) => {
       isGameEnd: gameInfo.isGameEnd,
       players: gameInfo.players,
       isNextRoundSettled: gameInfo.isNextRoundSettled,
+      isGameStart: gameInfo.isGameStart,
     },
   };
 };

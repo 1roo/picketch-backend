@@ -19,6 +19,7 @@ const {
   setGameEnd,
   getStartGameRes,
   getEndRoundRes,
+  getEndTimerRes,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -131,17 +132,30 @@ exports.nextTurnHandler = (io, socket) => {
     if (gameInfo.isNextRoundSettled) {
       return;
     }
+    // 참가 가능 방 여부 확인
+    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
+    if (gameInfo.isWaiting) throw new Error("대기중인 방입니다.");
+    // 내가 참가중인 방인지 확인
+    const isEntering = isUserInGame(userInfo.gameId, userInfo.userId);
+    if (!isEntering) throw new Error("참가 중인 방이 아닙니다.");
+    // 현재 라운드가 종료되었는지 확인
+    if (!gameInfo.isAnswerFound) throw new Error("현재 라운드가 종료되지 않았습니다.");
+    // nextTurn 요청이 올때 마지막 라운드인지 확인
+    if (gameInfo.currentRound >= gameInfo.maxRound) {
+      throw new Error("현재 마지막 라운드입니다.");
+    }
+    console.log("nextTurn 요청시 게임정보", gameInfo);
 
     // 타이머 설정
     function startTimer(gameId) {
       let remainingTime = timerDuration;
       // 타이머가 있으면 삭제 처리
       if (gameInfo.timer) {
+        clearInterval(gameInfo.timer);
         socketGamesInfo[userInfo.gameId] = {
           ...socketGamesInfo[userInfo.gameId],
           timer: null,
         };
-        clearInterval(gameInfo.timer);
       }
       // 새로운 타이머 생성
 
@@ -170,19 +184,6 @@ exports.nextTurnHandler = (io, socket) => {
     startTimer(userInfo.gameId);
     // gameInfo.isNextRoundSettled = true;
 
-    // 참가 가능 방 여부 확인
-    if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
-    if (gameInfo.isWaiting) throw new Error("대기중인 방입니다.");
-    // 내가 참가중인 방인지 확인
-    const isEntering = isUserInGame(userInfo.gameId, userInfo.userId);
-    if (!isEntering) throw new Error("참가 중인 방이 아닙니다.");
-    // 현재 라운드가 종료되었는지 확인
-    if (!gameInfo.isAnswerFound) throw new Error("현재 라운드가 종료되지 않았습니다.");
-    // nextTurn 요청이 올때 마지막 라운드인지 확인
-    if (gameInfo.currentRound >= gameInfo.maxRound) {
-      throw new Error("현재 마지막 라운드입니다.");
-    }
-    console.log("nextTurn 요청시 게임정보", gameInfo);
     // 다음 라운드 게임을 하기위한 세팅값 설정
     const gameId = userInfo.gameId;
     const currentTurnUserIndex = gameInfo.players.findIndex(
@@ -195,6 +196,7 @@ exports.nextTurnHandler = (io, socket) => {
     const nextCurrentRoundKeyword = gameInfo.keywords[nextCurrentRound - 1];
     const nextIsNextRoundSettled = true;
     const nextIsGameEnd = false;
+    const nextIsGameStart = true;
     setGameFromGamesInfo({
       gameId,
       newCurrentTurnUserId: nextCurrentTurnUserId,
@@ -203,6 +205,7 @@ exports.nextTurnHandler = (io, socket) => {
       newIsAnswerFound: nextIsAnswerFound,
       newIsNextRoundSettled: nextIsNextRoundSettled,
       newIsGameEnd: nextIsGameEnd,
+      newIsGameStart: nextIsGameStart,
     });
 
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
@@ -265,11 +268,14 @@ exports.endTimerHandler = (io, socket) => {
   const userInfo = getPlayerFromUsersInfo(socket.id);
   const gameInfo = getGameInfoByGameId(userInfo.gameId);
   if (gameInfo.timer) {
+    clearInterval(gameInfo.time);
     socketGamesInfo[userInfo.gameId] = {
       ...socketGamesInfo[userInfo.gameId],
       timer: null,
     };
   }
+  const endTimerRes = getEndTimerRes(socket.id, "타이머 종료");
+  io.of("/game").to(userInfo.gameId).emit("endTimer", endTimerRes);
 };
 
 exports.endRoundHandler = (io, socket) => {

@@ -172,7 +172,16 @@ exports.leaveGameRoomHandler = async (io, socket) => {
       }
     }
     await transaction.commit();
-
+    // 타이머 삭제
+    if (restParticipants.length <= 1) {
+      if (gameInfo.timer) {
+        clearInterval(gameInfo.time);
+        socketGamesInfo[userInfo.gameId] = {
+          ...socketGamesInfo[userInfo.gameId],
+          timer: null,
+        };
+      }
+    }
     // joinGame 성공 응답객체
     const leaveGameRes = getLeaveRes(socket.id, "게임방 퇴장");
     // 퇴장 처리 socketGamesInfo
