@@ -8,8 +8,10 @@ const {
 
 // 게임방 입장 API
 exports.joinGameRoom = async (req, res) => {
+  console.log("🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄");
   try {
     const { gameId, inputPw, userId } = req.body;
+    console.log("입장 api요청시 ", gameId, inputPw, userId);
     if (!userId) {
       return res
         .status(400)

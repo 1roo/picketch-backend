@@ -283,6 +283,8 @@ exports.leaveGameRoomHandler = async (io, socket) => {
     if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
 
     // 퇴장 처리 db
+    console.log("퇴장시 게임아이디", userInfo.gameId);
+    console.log("퇴장시 유저아이디", userInfo.userId);
     const destroyResult = await deleteEnterRoomFromDB(
       userInfo.gameId,
       userInfo.userId,
