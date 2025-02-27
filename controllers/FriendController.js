@@ -208,3 +208,18 @@ exports.deleteFriend = async (req, res) => {
     databaseError(res, err);
   }
 };
+
+exports.updateScore = async (req, res) => {
+  try {
+    const { user_id, score } = req.body;
+    const updateScore = await db.User.update(
+      {
+        user_score: db.Sequelize.literal(`user_score + ${score}`),
+      },
+      { where: { user_id }, individualHooks: true },
+    );
+    res.send(updateScore);
+  } catch (err) {
+    console.error(err);
+  }
+};

@@ -122,9 +122,9 @@ const dataRelation = () => {
 
 dataRelation();
 
-db.User.afterCreate(async (user, options) => {
-  await updateRegionScore(user.region_id);
-});
+// db.User.afterCreate(async (user, options) => {
+//   await updateRegionScore(user.region_id);
+// });
 
 db.User.afterUpdate(async (user, options) => {
   if (user.changed("user_score")) {
@@ -133,9 +133,8 @@ db.User.afterUpdate(async (user, options) => {
 });
 
 async function updateRegionScore(region_id) {
-  console.log(">>>>>>>>>>>>>>>>>");
   const regionScore = await db.User.sum("user_score", { where: { region_id } });
-
+  console.log(regionScore);
   await db.Region.update({ region_score: regionScore || 0 }, { where: { region_id } });
 }
 module.exports = db;
