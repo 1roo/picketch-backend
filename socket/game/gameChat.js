@@ -75,7 +75,7 @@ exports.gameChatHandler = (io, socket, payload) => {
 
         const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
         const endRoundRes = getEndRoundRes(socket.id);
-
+        clearInterval(socketGamesInfo[userInfo.gameId].timer);
         io.of("/game").to(userInfo.gameId).emit("endRound", endRoundRes);
         io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
       }

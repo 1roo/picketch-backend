@@ -160,6 +160,7 @@ exports.nextTurnHandler = (io, socket) => {
       // 새로운 타이머 생성
 
       // 타이머 카운트다운
+      console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥타이머 실행");
       const timerInterval = setInterval(() => {
         console.log("타이머시간", remainingTime);
         io.of("/game")
@@ -180,6 +181,7 @@ exports.nextTurnHandler = (io, socket) => {
         ...socketGamesInfo[userInfo.gameId],
         timer: timerInterval,
       };
+      console.log("타이머 설정할때 timerID", socketGamesInfo[userInfo.gameId].timer);
     }
     startTimer(userInfo.gameId);
     // gameInfo.isNextRoundSettled = true;
@@ -268,6 +270,7 @@ exports.endTimerHandler = (io, socket) => {
   const userInfo = getPlayerFromUsersInfo(socket.id);
   const gameInfo = getGameInfoByGameId(userInfo.gameId);
   if (gameInfo.timer) {
+    console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥타이머 삭제");
     clearInterval(gameInfo.time);
     socketGamesInfo[userInfo.gameId] = {
       ...socketGamesInfo[userInfo.gameId],
