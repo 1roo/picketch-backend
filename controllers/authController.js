@@ -145,13 +145,11 @@ const authController = {
       );
 
       success(res, "Success", {
-        data: {
-          userId: user.user_id,
-          ...tokens,
-          hasProfile,
-          tokenType: "Bearer",
-          expirationTime: 3600,
-        },
+        userId: user.user_id,
+        ...tokens,
+        hasProfile,
+        tokenType: "Bearer",
+        expirationTime: 3600,
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -217,13 +215,11 @@ const authController = {
       );
 
       success(res, "Success", {
-        data: {
-          userId: user.user_id,
-          ...tokens,
-          hasProfile,
-          tokenType: "Bearer",
-          expirationTime: 3600,
-        },
+        userId: user.user_id,
+        ...tokens,
+        hasProfile,
+        tokenType: "Bearer",
+        expirationTime: 3600,
       });
     } catch (err) {
       if (err.response || err.request) {
@@ -309,13 +305,11 @@ const authController = {
       );
 
       success(res, "Success", {
-        data: {
-          userId: user.user_id,
-          ...tokens,
-          hasProfile,
-          tokenType: "Bearer",
-          expirationTime: 3600,
-        },
+        userId: user.user_id,
+        ...tokens,
+        hasProfile,
+        tokenType: "Bearer",
+        expirationTime: 3600,
       });
     } catch (err) {
       if (err.response || err.request) {
