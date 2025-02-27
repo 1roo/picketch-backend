@@ -158,22 +158,24 @@ exports.getGameInfoByGameId = (gameId) => {
 
 // 게임 정보 생성 (socketGamesInfo)
 exports.createGameInfoFromDB = (gameId, game) => {
-  socketGamesInfo[gameId] = {
-    name: game.name,
-    currentTurnUserId: null,
-    currentRound: null,
-    maxRound: game.round,
-    isLock: game.is_lock,
-    pw: game.pw,
-    manager: game.manager,
-    isWaiting: game.is_waiting,
-    keywords: null,
-    currentRoundKeyword: null,
-    isAnswerFound: null,
-    isNextRoundSettled: null,
-    isGameEnd: null,
-    players: [],
-  };
+  if (!socketGamesInfo[gameId]) {
+    socketGamesInfo[gameId] = {
+      name: game.name,
+      currentTurnUserId: null,
+      currentRound: null,
+      maxRound: game.round,
+      isLock: game.is_lock,
+      pw: game.pw,
+      manager: game.manager,
+      isWaiting: game.is_waiting,
+      keywords: null,
+      currentRoundKeyword: null,
+      isAnswerFound: null,
+      isNextRoundSettled: null,
+      isGameEnd: null,
+      players: [],
+    };
+  }
 
   if (!socketGamesInfo[gameId]) throw new Error("gameInfo가 생성되지 않았습니다.");
 };
@@ -349,6 +351,7 @@ exports.setGameFromGamesInfo = ({
   newIsGameEnd,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
+  console.log("처음방입장시 게임정보");
   if (gameInfo) {
     socketGamesInfo[gameId] = {
       ...socketGamesInfo[gameId],
@@ -701,14 +704,15 @@ exports.getUpdateGameInfoRes = (socketId) => {
     type: "SUCCESS",
     message: `게임 정보`,
     data: {
-      gameId: userInfo.gameId || null,
-      gameName: gameInfo.name || null,
-      managerId: gameInfo.manager || null,
-      currentTurnUserId: gameInfo.currentTurnUserId || null,
-      maxRound: gameInfo.maxRound || null,
-      currentRound: gameInfo.currentRound || null,
+      gameId: userInfo.gameId,
+      gameName: gameInfo.name,
+      managerId: gameInfo.manager,
+      currentTurnUserId: gameInfo.currentTurnUserId,
+      maxRound: gameInfo.maxRound,
+      currentRound: gameInfo.currentRound,
       isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
-      players: gameInfo.players || null,
+      isGameEnd: gameInfo.isGameEnd,
+      players: gameInfo.players,
     },
   };
 };
@@ -716,7 +720,7 @@ exports.getUpdateGameInfoRes = (socketId) => {
 // readyGame 성공 응답
 exports.getReadyRes = (socketId) => {
   const userInfo = socketUsersInfo[socketId];
-  const gameInfo = socketGamesInfo[userInfo.name];
+  const gameInfo = socketGamesInfo[userInfo.gameId];
   const isAllReady = exports.checkAllReady(userInfo.gameId);
   return {
     type: "SUCCESS",
