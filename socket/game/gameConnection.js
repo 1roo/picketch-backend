@@ -97,6 +97,7 @@ exports.joinGameRoomHandler = async (io, socket, payload) => {
     // if (!game) throw new Error("db에 존재하지 않는 방입니다.");
 
     const gameInfo = getGameInfoByGameId(gameId);
+    if (!gameInfo) throw new Error("생성된 방이 아닙니다.");
     // 참가 가능 방 여부 확인
     if (!gameInfo.isWaiting) throw new Error("대기중인 방이 아닙니다.");
 
