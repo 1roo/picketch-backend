@@ -12,6 +12,8 @@ const {
   startGameHandler,
   nextTurnHandler,
   endGameHandler,
+  endTimerHandler,
+  endRoundHandler,
 } = require("./gameSetup");
 const { setPlayerToUsersInfo } = require("./gameUtils");
 
@@ -42,6 +44,14 @@ exports.gameSocket = async (io, socket) => {
   // 다음 라운드 시작
   socket.on("nextTurn", () => {
     nextTurnHandler(io, socket);
+  });
+  // 타이머 종료
+  socket.on("endTimer", () => {
+    endTimerHandler(io, socket);
+  });
+  // 라운드 종료
+  socket.on("endRound", () => {
+    endRoundHandler(io, socket);
   });
   // 게임 종료
   socket.on("endGame", async () => {

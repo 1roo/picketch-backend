@@ -638,6 +638,11 @@ exports.getLeaveRes = (socketId, message) => {
   return exports.successRes(socketId, message);
 };
 
+// endRound 성공 응답
+exports.getEndRoundRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
 // endGame 성공 응답
 exports.getEndGameRes = (socketId) => {
   if (!socketId) {
@@ -684,7 +689,7 @@ exports.getEndRoundRes = (socketId) => {
   return {
     type: "SUCCESS",
     message: "라운드 종료",
-    gameId: gameInfo.gameId,
+    gameId: userInfo.gameId,
     data: {
       correctUserId: userInfo.userId,
       answerKeyword: gameInfo.currentRoundKeyword,
@@ -700,6 +705,7 @@ exports.getUpdateGameInfoRes = (socketId) => {
   }
   const userInfo = exports.getPlayerFromUsersInfo(socketId);
   const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  console.log("❌❌❌❌❌❌❌❌❌❌", gameInfo);
   return {
     type: "SUCCESS",
     message: `게임 정보`,
@@ -713,6 +719,7 @@ exports.getUpdateGameInfoRes = (socketId) => {
       isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
       isGameEnd: gameInfo.isGameEnd,
       players: gameInfo.players,
+      isNextRoundSettled: gameInfo.isNextRoundSettled,
     },
   };
 };
