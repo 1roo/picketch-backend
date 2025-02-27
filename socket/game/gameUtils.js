@@ -2,18 +2,18 @@ const db = require("../../models");
 const { socketGamesInfo, socketUsersInfo } = require("./gameStore");
 
 // 현재 만들어져있는 방 여부 확인 db
-exports.getGameRoom = async (gameId, is_waiting, transaction) => {
+exports.getGameRoom = async (gameId, is_waiting = true, transaction) => {
   console.log("isActive는", is_waiting);
   const game = await db.Game.findOne({
     where: {
       game_id: gameId,
-      // is_waiting: Number(is_waiting),
       is_waiting: is_waiting,
     },
     transaction,
   });
   return game;
 };
+
 
 // 방장 변경( 방장이 아닌 유저가 퇴장할 경우) db
 exports.updateGameRoom = async (gameId, changeValue, transaction) => {
@@ -118,26 +118,26 @@ exports.leaveGameFromUsersInfo = (socketId) => {
 // 유저 정보에 소켓 연결유저 메모리에 저장 (socketUserInfo)
 exports.setPlayerToUsersInfo = (socket) => {
   if (!socket.id) throw new Error("연결된 소켓 id 값이 없습니다.");
+  if (!socket.userInfo) {
+    socket.userInfo = {
+      userId: Number(socket.handshake.query.userId) || null,
+      nickname: socket.handshake.query.nickname || "익명",
+      region: socket.handshake.query.region || "",
+      character: socket.handshake.query.character || "",
+      gameId: socket.handshake.query.gameId || null,
+    };
+  }
   if (!socketUsersInfo[socket.id]) {
     socketUsersInfo[socket.id] = {};
   }
-  if (socket.userInfo.userId !== undefined) {
-    socketUsersInfo[socket.id].userId = socket.userInfo.userId;
-  }
-  if (socket.userInfo.nickname !== undefined) {
-    socketUsersInfo[socket.id].nickname = socket.userInfo.nickname;
-  }
-  if (socket.userInfo.region !== undefined) {
-    socketUsersInfo[socket.id].region = socket.userInfo.region;
-  }
-  if (socket.userInfo.character !== undefined) {
-    socketUsersInfo[socket.id].character = socket.userInfo.character;
-  }
-  if (socket.userInfo.gameId !== undefined) {
-    socketUsersInfo[socket.id].gameId = socket.userInfo.gameId;
-  }
-  console.log("연결 소켓유저 userInfo에 저장후 ", socketUsersInfo);
+  socketUsersInfo[socket.id].userId = socket.userInfo.userId;
+  socketUsersInfo[socket.id].nickname = socket.userInfo.nickname;
+  socketUsersInfo[socket.id].region = socket.userInfo.region;
+  socketUsersInfo[socket.id].character = socket.userInfo.character;
+  socketUsersInfo[socket.id].gameId = socket.userInfo.gameId;
+  console.log("연결 소켓유저 userInfo 저장 완료:", socketUsersInfo);
 };
+
 
 // 유저 정보 삭제 (socketUserInfo)
 exports.deletePlayerUsersInfo = (socketId) => {
