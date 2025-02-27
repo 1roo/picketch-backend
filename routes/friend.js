@@ -16,4 +16,5 @@ friendRouter.get(
 );
 friendRouter.delete("/:friend_id", authMiddleware, friendController.deleteFriend);
 
+friendRouter.post("/test", friendController.updateScore);
 module.exports = friendRouter;

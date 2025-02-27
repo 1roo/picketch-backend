@@ -408,7 +408,11 @@ exports.setPlayersScore = async (playersInfo, transaction) => {
       {
         user_score: db.Sequelize.literal(`user_score + ${player.score}`),
       },
-      { where: { user_id: player.userId }, transaction: transaction },
+      {
+        where: { user_id: player.userId },
+        transaction: transaction,
+        individualHooks: true,
+      },
     );
   });
   // 전체 쿼리 동시에 실행
