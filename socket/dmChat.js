@@ -58,7 +58,8 @@ exports.dmChatSocket = (io, socket) => {
     dmRoomId = Number(dmChatRoom.dm_id);
     const prevChat = await db.DmChat.findAll({
       where: { dm_id: dmRoomId },
-      attributes: ["message", "sender_id", "timestamp"],
+      attributes: ["message", "sender_id", "timestamp", ["is_read", "isRead"]],
+      order: [["timestamp", "ASC"]],
     });
     // DM 방 입장
     socket.join(dmRoomId);
@@ -105,6 +106,7 @@ exports.dmChatSocket = (io, socket) => {
       message: data.message,
       sender_id: senderId,
       is_read: chatUserInfo[receiverId] ? true : false,
+      // is_read:Boolean(chatUserInfo[receiverId]),
       timestamp: data.timestamp,
     });
     if (!saveMsg) return socket.emit("error", { errMsg: "Database Error" });
@@ -128,6 +130,7 @@ exports.dmChatSocket = (io, socket) => {
       from: data.senderNick,
       message: data.message,
       timestamp: data.timestamp,
+      isRead: Boolean(chatUserInfo[receiverId]),
     };
     console.log(msgData);
     io.of("/dmChat").to(dmRoomId).emit("receiveDm", msgData);
@@ -135,11 +138,14 @@ exports.dmChatSocket = (io, socket) => {
   socket.on("exitDm", () => {
     console.log(`${socket.id}인 ${userId}님 ${dmRoomId}방 퇴장`);
     socket.leave(dmRoomId);
-    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    delete chatUserInfo[userId];
+    io.of("/dmChat").to(dmRoomId).emit("updateUserInfo", chatUserInfo);
   });
   socket.on("disconnect", () => {
     console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
-    delete chatUserInfo[userId];
-    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    if (chatUserInfo[userId]) {
+      delete chatUserInfo[userId];
+    }
+    io.of("/dmChat").to(dmRoomId).emit("updateUserInfo", chatUserInfo);
   });
 };
