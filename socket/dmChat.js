@@ -77,13 +77,8 @@ exports.dmChatSocket = (io, socket) => {
       );
     }
     // 방 정보 전달
-    dmData = {
-      dmRoomId,
-      chatUserInfo,
-      prevChat: prevChat ? prevChat : null,
-    };
-    console.log(dmData);
-    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    socket.emit("prevChat", prevChat);
+    io.of("/dmChat").to(dmRoomId).emit("updateUserInfo", chatUserInfo);
   });
 
   // 채팅 받기
