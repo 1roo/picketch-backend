@@ -17,6 +17,9 @@ const {
   getParticipants,
   setPlayersScore,
   setGameEnd,
+  getStartGameRes,
+  getEndRoundRes,
+  getEndTimerRes,
 } = require("./gameUtils");
 
 exports.readyGameHandler = async (io, socket) => {
@@ -80,32 +83,36 @@ exports.startGameHandler = async (io, socket) => {
     const updateResult = await updateWaitingStatus(userInfo.gameId);
     if (!updateResult[0]) throw new Error("isWaiting 상태를 변경할 수 없습니다.");
 
-    // 스타트를 누르면 게임을 하기위한 세팅값 설정
-    const newCurrentTurnUserId = gameInfo.players[0].userId;
+    // // 스타트를 누르면 게임을 하기위한 세팅값 설정
+    // const newCurrentTurnUserId = gameInfo.players[0].userId;
     const newMaxRound = gameInfo.players.length * gameInfo.maxRound;
-    const newCurrentRound = 1;
+    const newCurrentRound = 0;
     const newIsWaiting = false;
-    const newIsAnswerFound = false;
+    const newIsAnswerFound = true;
     const newKeywords = await getRandomKeywords(newMaxRound);
-    const newCurrentRoundKeyword = newKeywords[newCurrentRound - 1];
-    const newIsNextRoundSettled = true;
+    // const newCurrentRoundKeyword = newKeywords[newCurrentRound - 1];
+    // const newIsNextRoundSettled = true;
     const newIsGameEnd = false;
 
     setGameFromGamesInfo({
       gameId: userInfo.gameId,
-      newCurrentTurnUserId,
+      // newCurrentTurnUserId,
       newMaxRound,
       newCurrentRound,
       newKeywords,
-      newCurrentRoundKeyword,
+      // newCurrentRoundKeyword,
       newIsWaiting,
       newIsAnswerFound,
-      newIsNextRoundSettled,
+      // newIsNextRoundSettled,
       newIsGameEnd,
     });
 
     console.log("게임시작시 게임정보", socketGamesInfo[userInfo.gameId]);
-    emitRoundStartWithTurn(io, socket.id, "startGame");
+    // emitRoundStartWithTurn(io, socket.id, "startGame");
+    const startGameRes = getStartGameRes(socket.id, "게임 시작");
+    io.of("/game").to(userInfo.gameId).emit("startGame", startGameRes);
+    const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
+    io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
   } catch (err) {
     console.log(err);
     const startErrRes = getErrorRes(socket.id, err.message);
@@ -114,16 +121,17 @@ exports.startGameHandler = async (io, socket) => {
 };
 
 // 중복으로 클라이언트에게 응답보내는것을 방지
+const timerDuration = 15;
 exports.nextTurnHandler = (io, socket) => {
   try {
+    console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥nextTurnHandler 실행");
     const userInfo = getPlayerFromUsersInfo(socket.id);
     const gameInfo = getGameInfoByGameId(userInfo.gameId);
-
+    console.log("넥스트 함수실행할때 유저정보", userInfo);
     // 라운드 세팅이 완료된 이후 들어오는 요청 무시
     if (gameInfo.isNextRoundSettled) {
       return;
     }
-
     // 참가 가능 방 여부 확인
     if (!gameInfo) throw new Error("존재하지 않는 방입니다.");
     if (gameInfo.isWaiting) throw new Error("대기중인 방입니다.");
@@ -137,6 +145,47 @@ exports.nextTurnHandler = (io, socket) => {
       throw new Error("현재 마지막 라운드입니다.");
     }
     console.log("nextTurn 요청시 게임정보", gameInfo);
+
+    // 타이머 설정
+    function startTimer(gameId) {
+      let remainingTime = timerDuration;
+      // 타이머가 있으면 삭제 처리
+      if (gameInfo.timer) {
+        clearInterval(gameInfo.timer);
+        socketGamesInfo[userInfo.gameId] = {
+          ...socketGamesInfo[userInfo.gameId],
+          timer: null,
+        };
+      }
+      // 새로운 타이머 생성
+
+      // 타이머 카운트다운
+      console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥타이머 실행");
+      const timerInterval = setInterval(() => {
+        console.log("타이머시간", remainingTime);
+        io.of("/game")
+          .to(gameId)
+          .emit("updateTimer", { type: "SUCCESS", data: { remainingTime } }); // 모든 클라이언트에 타이머 정보 전송
+        remainingTime--;
+
+        if (remainingTime < 0) {
+          clearInterval(timerInterval); // 타이머 종료
+          socketGamesInfo[userInfo.gameId] = {
+            ...socketGamesInfo[userInfo.gameId],
+            timer: null,
+          };
+          io.of("/game").to(gameId).emit("endTimer"); // 타이머 종료 이벤트 전송
+        }
+      }, 1000);
+      socketGamesInfo[userInfo.gameId] = {
+        ...socketGamesInfo[userInfo.gameId],
+        timer: timerInterval,
+      };
+      console.log("타이머 설정할때 timerID", socketGamesInfo[userInfo.gameId].timer);
+    }
+    startTimer(userInfo.gameId);
+    // gameInfo.isNextRoundSettled = true;
+
     // 다음 라운드 게임을 하기위한 세팅값 설정
     const gameId = userInfo.gameId;
     const currentTurnUserIndex = gameInfo.players.findIndex(
@@ -149,6 +198,7 @@ exports.nextTurnHandler = (io, socket) => {
     const nextCurrentRoundKeyword = gameInfo.keywords[nextCurrentRound - 1];
     const nextIsNextRoundSettled = true;
     const nextIsGameEnd = false;
+    const nextIsGameStart = true;
     setGameFromGamesInfo({
       gameId,
       newCurrentTurnUserId: nextCurrentTurnUserId,
@@ -157,6 +207,7 @@ exports.nextTurnHandler = (io, socket) => {
       newIsAnswerFound: nextIsAnswerFound,
       newIsNextRoundSettled: nextIsNextRoundSettled,
       newIsGameEnd: nextIsGameEnd,
+      newIsGameStart: nextIsGameStart,
     });
 
     const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
@@ -212,4 +263,40 @@ exports.endGameHandler = async (io, socket) => {
     const endGameErrRes = getErrorRes(socket.id, err.message);
     socket.emit("endGame", endGameErrRes);
   }
+};
+
+exports.endTimerHandler = (io, socket) => {
+  console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥엔드타이머 실행");
+  const userInfo = getPlayerFromUsersInfo(socket.id);
+  const gameInfo = getGameInfoByGameId(userInfo.gameId);
+  if (gameInfo.timer) {
+    console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥타이머 삭제");
+    clearInterval(gameInfo.time);
+    socketGamesInfo[userInfo.gameId] = {
+      ...socketGamesInfo[userInfo.gameId],
+      timer: null,
+    };
+  }
+  const endTimerRes = getEndTimerRes(socket.id, "타이머 종료");
+  io.of("/game").to(userInfo.gameId).emit("endTimer", endTimerRes);
+};
+
+exports.endRoundHandler = (io, socket) => {
+  console.log("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥엔드타이머 실행");
+  const userInfo = getPlayerFromUsersInfo(socket.id);
+  const gameInfo = getGameInfoByGameId(userInfo.gameId);
+
+  const nextIsNextRoundSettled = false;
+  const nextIsAnswerFound = true;
+
+  setGameFromGamesInfo({
+    gameId: userInfo.gameId,
+    newIsNextRoundSettled: nextIsNextRoundSettled,
+    newIsAnswerFound: nextIsAnswerFound,
+  });
+
+  const endRoundRes = getEndRoundRes(socket.id);
+  console.log("endRound시 응답값", endRoundRes);
+  io.of("/game").to(userInfo.gameId).emit("endRound", endRoundRes);
+  console.log("endRound 이후 게임정보", socketGamesInfo[userInfo.gameId]);
 };

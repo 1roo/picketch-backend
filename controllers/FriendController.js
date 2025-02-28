@@ -28,7 +28,11 @@ exports.getFriend = async (req, res) => {
 exports.friendRequest = async (req, res) => {
   try {
     const from_user_id = req.user.user_id;
-    const user_id = Number(req.params.friend_id);
+    const nickname = req.params.friend_nickname;
+    const friendInfo = await db.User({
+      where: { nickname },
+    });
+    const user_id = friendInfo.user_id;
     const sender = await db.User.findOne({
       where: { user_id: from_user_id },
     });
@@ -89,7 +93,11 @@ exports.friendRequest = async (req, res) => {
 // 친구 요청 수락
 exports.acceptFriendRequest = async (req, res) => {
   try {
-    const sender_id = Number(req.params.sender_id);
+    const nickname = req.params.friend_nickname;
+    const friendInfo = await db.User({
+      where: { nickname },
+    });
+    const sender_id = friendInfo.user_id;
     const user_id = req.user.user_id;
 
     // 요청 존재 여부 확인
@@ -142,7 +150,11 @@ exports.acceptFriendRequest = async (req, res) => {
 // 친구 거절
 exports.rejectFriendRequest = async (req, res) => {
   try {
-    const sender_id = Number(req.params.sender_id);
+    const nickname = req.params.friend_nickname;
+    const friendInfo = await db.User({
+      where: { nickname },
+    });
+    const sender_id = friendInfo.user_id;
     const user_id = req.user.user_id;
 
     // 요청 존재 여부 확인
@@ -194,5 +206,20 @@ exports.deleteFriend = async (req, res) => {
     success(res, `${user_id}님과 ${friend_id}님이 친구를 끊었습니다.`);
   } catch (err) {
     databaseError(res, err);
+  }
+};
+
+exports.updateScore = async (req, res) => {
+  try {
+    const { user_id, score } = req.body;
+    const updateScore = await db.User.update(
+      {
+        user_score: db.Sequelize.literal(`user_score + ${score}`),
+      },
+      { where: { user_id }, individualHooks: true },
+    );
+    res.send(updateScore);
+  } catch (err) {
+    console.error(err);
   }
 };

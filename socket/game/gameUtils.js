@@ -158,23 +158,25 @@ exports.getGameInfoByGameId = (gameId) => {
 
 // 게임 정보 생성 (socketGamesInfo)
 exports.createGameInfoFromDB = (gameId, game) => {
-  socketGamesInfo[gameId] = {
-    name: game.name,
-    currentTurnUserId: null,
-    currentRound: null,
-    maxRound: game.round,
-    isLock: game.is_lock,
-    pw: game.pw,
-    manager: game.manager,
-    isWaiting: game.is_waiting,
-    keywords: null,
-    currentRoundKeyword: null,
-    isAnswerFound: null,
-    isNextRoundSettled: null,
-    isGameEnd: null,
-    players: [],
-  };
-
+  if (!socketGamesInfo[gameId]) {
+    socketGamesInfo[gameId] = {
+      name: game.name,
+      currentTurnUserId: null,
+      currentRound: 1,
+      maxRound: game.round * 1,
+      isLock: game.is_lock,
+      pw: game.pw,
+      manager: game.manager,
+      isWaiting: game.is_waiting,
+      keywords: null,
+      currentRoundKeyword: null,
+      isAnswerFound: null,
+      isNextRoundSettled: null,
+      isGameEnd: null,
+      players: [],
+    };
+  }
+  console.log("createGameInfoFromDB생성후 게임정보", socketGamesInfo[gameId]);
   if (!socketGamesInfo[gameId]) throw new Error("gameInfo가 생성되지 않았습니다.");
 };
 // 게임 정보에 참가자 넣기 (socketGamesInfo)
@@ -347,8 +349,10 @@ exports.setGameFromGamesInfo = ({
   newIsAnswerFound,
   newIsNextRoundSettled,
   newIsGameEnd,
+  newIsGameStart,
 }) => {
   const gameInfo = socketGamesInfo[gameId];
+  console.log("처음방입장시 게임정보");
   if (gameInfo) {
     socketGamesInfo[gameId] = {
       ...socketGamesInfo[gameId],
@@ -368,6 +372,9 @@ exports.setGameFromGamesInfo = ({
       }),
       ...(newIsGameEnd !== undefined && {
         isGameEnd: newIsGameEnd,
+      }),
+      ...(newIsGameStart !== undefined && {
+        isGameStart: newIsGameStart,
       }),
     };
     console.log("게임 정보 세팅후 ", socketGamesInfo[gameId]);
@@ -401,7 +408,11 @@ exports.setPlayersScore = async (playersInfo, transaction) => {
       {
         user_score: db.Sequelize.literal(`user_score + ${player.score}`),
       },
-      { where: { user_id: player.userId }, transaction: transaction },
+      {
+        where: { user_id: player.userId },
+        transaction: transaction,
+        individualHooks: true,
+      },
     );
   });
   // 전체 쿼리 동시에 실행
@@ -635,6 +646,16 @@ exports.getLeaveRes = (socketId, message) => {
   return exports.successRes(socketId, message);
 };
 
+// endRound 성공 응답
+exports.getEndRoundRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
+// endEndTimer 성공 응답
+exports.getEndTimerRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
+};
+
 // endGame 성공 응답
 exports.getEndGameRes = (socketId) => {
   if (!socketId) {
@@ -681,7 +702,7 @@ exports.getEndRoundRes = (socketId) => {
   return {
     type: "SUCCESS",
     message: "라운드 종료",
-    gameId: gameInfo.gameId,
+    gameId: userInfo.gameId,
     data: {
       correctUserId: userInfo.userId,
       answerKeyword: gameInfo.currentRoundKeyword,
@@ -697,18 +718,22 @@ exports.getUpdateGameInfoRes = (socketId) => {
   }
   const userInfo = exports.getPlayerFromUsersInfo(socketId);
   const gameInfo = exports.getGameInfoByGameId(userInfo.gameId);
+  console.log("❌❌❌❌❌❌❌❌❌❌", gameInfo);
   return {
     type: "SUCCESS",
     message: `게임 정보`,
     data: {
-      gameId: userInfo.gameId || null,
-      gameName: gameInfo.name || null,
-      managerId: gameInfo.manager || null,
-      currentTurnUserId: gameInfo.currentTurnUserId || null,
-      maxRound: gameInfo.maxRound || null,
-      currentRound: gameInfo.currentRound || null,
+      gameId: userInfo.gameId,
+      gameName: gameInfo.name,
+      managerId: gameInfo.manager,
+      currentTurnUserId: gameInfo.currentTurnUserId,
+      maxRound: gameInfo.maxRound,
+      currentRound: gameInfo.currentRound,
       isAnswerFound: gameInfo.isAnswerFound === undefined ? null : gameInfo.isAnswerFound,
-      players: gameInfo.players || null,
+      isGameEnd: gameInfo.isGameEnd,
+      players: gameInfo.players,
+      isNextRoundSettled: gameInfo.isNextRoundSettled,
+      isGameStart: gameInfo.isGameStart,
     },
   };
 };
@@ -716,7 +741,7 @@ exports.getUpdateGameInfoRes = (socketId) => {
 // readyGame 성공 응답
 exports.getReadyRes = (socketId) => {
   const userInfo = socketUsersInfo[socketId];
-  const gameInfo = socketGamesInfo[userInfo.name];
+  const gameInfo = socketGamesInfo[userInfo.gameId];
   const isAllReady = exports.checkAllReady(userInfo.gameId);
   return {
     type: "SUCCESS",
@@ -785,4 +810,9 @@ exports.getClearRes = (socketId) => {
     gameId: userInfo.gameId || null,
     drawUserId: userInfo.userId || null,
   };
+};
+
+// startGame응답
+exports.getStartGameRes = (socketId, message) => {
+  return exports.successRes(socketId, message);
 };

@@ -9,7 +9,8 @@ const {
 
 exports.drawCanvasHandler = (io, socket, payload) => {
   // from 클리이언트 with x,y,brushColor
-  const { x, y, brushColor } = payload;
+  const { x, y, brushColor, newLine } = payload;
+  console.log("그리기에서", payload);
   try {
     // payload 유효성 검사
     if (typeof brushColor !== "string" || !brushColor)
@@ -46,9 +47,9 @@ exports.drawCanvasHandler = (io, socket, payload) => {
 };
 
 exports.clearCanvasHandler = (io, socket, cb) => {
+  const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
   try {
     // 유저 정보 조회
-    const { userId, nickname, gameId } = getPlayerFromUsersInfo(socket.id);
 
     // 해당 유저가 방에 접속중인 유저인지 확인
     const isEntering = isUserInGame(gameId, userId);
@@ -69,10 +70,10 @@ exports.clearCanvasHandler = (io, socket, cb) => {
     // 클라이언트에서 캔버스 지우기 함수 실행(콜백)
     // cb();
     const clearCanvasRes = getClearRes(socket.id);
-    socket.emit("clearCanvas", clearCanvasRes);
+    io.of("/game").to(gameId).emit("clearCanvas", clearCanvasRes);
   } catch (err) {
     console.log(err);
     const clearCanvasErrRes = getErrorRes(socket.id, err.message);
-    socket.emit("clearCanvas", clearCanvasErrRes);
+    io.of("/game").to(gameId).emit("clearCanvas", clearCanvasErrRes);
   }
 };

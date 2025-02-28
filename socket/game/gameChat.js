@@ -41,6 +41,8 @@ exports.gameChatHandler = (io, socket, payload) => {
     io.of("/game").to(userInfo.gameId).emit("gameMessage", sendMsgRes);
 
     // 게임 시작 상태 AND 방장이 아닌 유저인 경우 정답 확인
+    // isTimerActive가 true일때만 정답 검증하기
+
     if (
       !gameInfo.isWaiting &&
       gameInfo.currentTurnUserId !== userInfo.userId &&
@@ -73,7 +75,7 @@ exports.gameChatHandler = (io, socket, payload) => {
 
         const updateGameInfoRes = getUpdateGameInfoRes(socket.id);
         const endRoundRes = getEndRoundRes(socket.id);
-
+        clearInterval(socketGamesInfo[userInfo.gameId].timer);
         io.of("/game").to(userInfo.gameId).emit("endRound", endRoundRes);
         io.of("/game").to(userInfo.gameId).emit("updateGameInfo", updateGameInfoRes);
       }

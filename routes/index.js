@@ -5,6 +5,7 @@ const userRouter = require("./user");
 const rankingRouter = require("./ranking");
 const friendRouter = require("./friend");
 const gameRoomRouter = require("./game-room");
+const gameRouter = require("./game");
 
 // /api/auth
 router.use("/auth", authRouter);
@@ -20,5 +21,8 @@ router.use("/ranking", rankingRouter);
 
 // api/game-room
 router.use("/game-room", gameRoomRouter);
+
+// api/game
+router.use("/game", gameRouter);
 
 module.exports = router;

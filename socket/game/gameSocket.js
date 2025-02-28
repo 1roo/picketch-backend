@@ -6,11 +6,14 @@ const {
   socketDisconnect,
   managerJoinHandler,
 } = require("./gameConnection");
+const { updateGameInfoHandler } = require("./gameInfoUpdate");
 const {
   readyGameHandler,
   startGameHandler,
   nextTurnHandler,
   endGameHandler,
+  endTimerHandler,
+  endRoundHandler,
 } = require("./gameSetup");
 const { setPlayerToUsersInfo } = require("./gameUtils");
 
@@ -26,6 +29,10 @@ exports.gameSocket = async (io, socket) => {
   socket.on("managerJoinGame", async (payload) => {
     await managerJoinHandler(io, socket, payload);
   });
+  // 게임 정보 요청
+  socket.on("updateGameInfo", async () => {
+    updateGameInfoHandler(io, socket);
+  });
   // 게임 준비
   socket.on("readyGame", async () => {
     await readyGameHandler(io, socket);
@@ -37,6 +44,14 @@ exports.gameSocket = async (io, socket) => {
   // 다음 라운드 시작
   socket.on("nextTurn", () => {
     nextTurnHandler(io, socket);
+  });
+  // 타이머 종료
+  socket.on("endTimer", () => {
+    endTimerHandler(io, socket);
+  });
+  // 라운드 종료
+  socket.on("endRound", () => {
+    endRoundHandler(io, socket);
   });
   // 게임 종료
   socket.on("endGame", async () => {

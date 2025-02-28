@@ -14,10 +14,10 @@ exports.dmChatSocket = (io, socket) => {
   console.log(`${socket.id}인 ${userId} dmChat socket 접속`);
   // 채팅방 접속
   let dmRoomId;
-  socket.on("joinDm", async (data) => {
+  socket.on("joinDm", async (nickname) => {
     // friendId 조회
     const friendInfo = await db.User.findOne({
-      where: { nickname: data.friendNick },
+      where: { nickname: nickname },
       attributes: ["user_id", "nickname"],
     });
     const friendId = friendInfo.user_id;
@@ -54,12 +54,12 @@ exports.dmChatSocket = (io, socket) => {
         user_id: userId,
         friend_id: friendId,
       });
-      prevChat = null;
     }
     dmRoomId = Number(dmChatRoom.dm_id);
     const prevChat = await db.DmChat.findAll({
       where: { dm_id: dmRoomId },
-      attributes: ["message", "sender_id"],
+      attributes: ["message", "sender_id", "timestamp", ["is_read", "isRead"]],
+      order: [["timestamp", "ASC"]],
     });
     // DM 방 입장
     socket.join(dmRoomId);
@@ -106,6 +106,8 @@ exports.dmChatSocket = (io, socket) => {
       message: data.message,
       sender_id: senderId,
       is_read: chatUserInfo[receiverId] ? true : false,
+      // is_read:Boolean(chatUserInfo[receiverId]),
+      timestamp: data.timestamp,
     });
     if (!saveMsg) return socket.emit("error", { errMsg: "Database Error" });
     console.log(chatUserInfo);
@@ -127,13 +129,23 @@ exports.dmChatSocket = (io, socket) => {
       dmRoomId,
       from: data.senderNick,
       message: data.message,
+      timestamp: data.timestamp,
+      isRead: Boolean(chatUserInfo[receiverId]),
     };
     console.log(msgData);
     io.of("/dmChat").to(dmRoomId).emit("receiveDm", msgData);
   });
+  socket.on("exitDm", () => {
+    console.log(`${socket.id}인 ${userId}님 ${dmRoomId}방 퇴장`);
+    socket.leave(dmRoomId);
+    delete chatUserInfo[userId];
+    io.of("/dmChat").to(dmRoomId).emit("updateUserInfo", chatUserInfo);
+  });
   socket.on("disconnect", () => {
     console.log(`${socket.id}인 ${userId}님 dmChat socket 퇴장`);
-    delete chatUserInfo[userId];
-    io.of("/dmChat").to(dmRoomId).emit("updateDmRoomInfo", dmData);
+    if (chatUserInfo[userId]) {
+      delete chatUserInfo[userId];
+    }
+    io.of("/dmChat").to(dmRoomId).emit("updateUserInfo", chatUserInfo);
   });
 };
