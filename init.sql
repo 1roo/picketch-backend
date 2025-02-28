@@ -73,7 +73,8 @@ VALUES
 
 INSERT INTO friend (user_id,friend_id,friend_nickname)
 VALUES
-(10,1,"훈이"),
+(10,11,"윤따라"),
+(11,10,"소오오");
 (10,2,"짱구"),
 (10,2,"맹구");
 
@@ -84,3 +85,4 @@ VALUES
   (3, '난 맹구', 3, false, "02월 27일 21:47",NOW(),NOW()),
   (3, '난 맹구', 3, false, "02월 27일 21:48",NOW(),NOW());
 
+UPDATE dm_chat set is_read=true WHERE dm_id=1;
